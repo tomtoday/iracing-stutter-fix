@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iRacing Stutter Fix Guide — AMD Ryzen X3D + NVIDIA GPU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0a0c10;
+  --bg2:      #10141c;
+  --bg3:      #181d28;
+  --border:   #1e2535;
+  --border2:  #252d40;
+  --green:    #00e5a0;
+  --green-dim:#00e5a022;
+  --blue:     #3d9eff;
+  --blue-dim: #3d9eff18;
+  --amber:    #ffb347;
+  --amber-dim:#ffb34718;
+  --red:      #ff5e5e;
+  --red-dim:  #ff5e5e18;
+  --text:     #b8c4d8;
+  --text-dim: #586278;
+  --text-hi:  #e8eef8;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Instrument Sans', sans-serif;
+  --display:  'Syne', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.7; min-height: 100vh; }
+.hero { position: relative; padding: 5rem 2rem 4rem; overflow: hidden; border-bottom: 1px solid var(--border); }
+.hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 20% 50%, #00e5a012 0%, transparent 70%), radial-gradient(ellipse 40% 60% at 80% 20%, #3d9eff0a 0%, transparent 70%); pointer-events: none; }
+.hero-inner { max-width: 900px; margin: 0 auto; position: relative; }
+.hero-tag { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--green); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 1.5rem; padding: 4px 10px; border: 1px solid var(--green); border-radius: 2px; opacity: 0.8; }
+.hero h1 { font-family: var(--display); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; color: var(--text-hi); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 1rem; }
+.hero h1 span { color: var(--green); }
+.hero-sub { font-size: 16px; color: var(--text-dim); max-width: 600px; margin-bottom: 2rem; }
+.hero-specs { display: flex; flex-wrap: wrap; gap: 8px; }
+.spec-pill { font-family: var(--mono); font-size: 11px; color: var(--blue); background: var(--blue-dim); border: 1px solid #3d9eff30; border-radius: 3px; padding: 3px 10px; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 2rem 5rem; }
+.section { margin-top: 3.5rem; }
+.section-label { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; }
+.section-num { font-family: var(--mono); font-size: 11px; color: var(--text-dim); min-width: 28px; }
+.section-title { font-family: var(--display); font-size: 1.3rem; font-weight: 700; color: var(--text-hi); letter-spacing: -0.01em; }
+.section-tag { font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 2px; letter-spacing: 0.08em; text-transform: uppercase; }
+.tag-green { color: var(--green); background: var(--green-dim); border: 1px solid #00e5a030; }
+.tag-blue  { color: var(--blue);  background: var(--blue-dim);  border: 1px solid #3d9eff30; }
+.tag-amber { color: var(--amber); background: var(--amber-dim); border: 1px solid #ffb34730; }
+.tag-red   { color: var(--red);   background: var(--red-dim);   border: 1px solid #ff5e5e30; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 3.5rem 0 0; }
+p { margin-bottom: 0.8rem; color: var(--text); }
+p:last-child { margin-bottom: 0; }
+strong { color: var(--text-hi); font-weight: 600; }
+.callout { padding: 1rem 1.25rem; border-radius: 4px; margin: 1rem 0; font-size: 14px; display: flex; gap: 0.75rem; align-items: flex-start; }
+.callout-icon { flex-shrink: 0; font-size: 15px; margin-top: 1px; }
+.callout.info  { background: var(--blue-dim);  border: 1px solid #3d9eff25; color: #8ec8ff; }
+.callout.warn  { background: var(--amber-dim); border: 1px solid #ffb34725; color: #ffd080; }
+.callout.good  { background: var(--green-dim); border: 1px solid #00e5a025; color: #60f0b8; }
+.code-block { background: #070910; border: 1px solid var(--border2); border-left: 3px solid var(--blue); border-radius: 4px; padding: 0.875rem 1.125rem; margin: 0.75rem 0; font-family: var(--mono); font-size: 12.5px; color: #7ec8ff; overflow-x: auto; white-space: pre; line-height: 1.6; }
+.code-comment { color: var(--text-dim); }
+.steps { counter-reset: step-counter; margin: 1rem 0; }
+.step { display: flex; gap: 1rem; margin-bottom: 0.875rem; padding: 0.875rem 1.125rem; background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; counter-increment: step-counter; }
+.step::before { content: counter(step-counter, decimal-leading-zero); font-family: var(--mono); font-size: 11px; color: var(--green); min-width: 24px; padding-top: 2px; flex-shrink: 0; }
+.step-body { flex: 1; font-size: 14px; }
+.step-body strong { color: var(--text-hi); display: block; margin-bottom: 3px; }
+.settings-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 0.875rem 0; }
+.settings-table th { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; padding: 0.5rem 0.875rem; border-bottom: 1px solid var(--border2); text-align: left; }
+.settings-table td { padding: 0.5rem 0.875rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.settings-table tr:last-child td { border-bottom: none; }
+.settings-table .s-key { font-family: var(--mono); font-size: 12px; color: var(--text-hi); }
+.settings-table .s-val { color: var(--green); font-weight: 600; font-family: var(--mono); font-size: 12px; }
+.settings-table .s-note { color: var(--text-dim); font-size: 12px; }
+.finding-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 1rem 0; }
+@media (max-width: 640px) { .finding-grid { grid-template-columns: 1fr; } }
+.finding-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 5px; padding: 1rem 1.125rem; }
+.finding-card .fc-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+.finding-card .fc-title { font-family: var(--display); font-size: 14px; font-weight: 700; color: var(--text-hi); margin-bottom: 8px; }
+.finding-card .fc-row { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; margin-bottom: 3px; }
+.finding-card .fc-k { color: var(--text-dim); }
+.finding-card .fc-v { color: var(--text); }
+.finding-card .fc-v.good { color: var(--green); font-weight: 600; }
+.finding-card .fc-v.bad  { color: var(--red);   font-weight: 600; }
+.finding-card .fc-v.warn { color: var(--amber); }
+.results-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--mono); margin: 1rem 0; }
+.results-table th { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border2); text-align: right; white-space: nowrap; }
+.results-table th:first-child { text-align: left; }
+.results-table td { padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border); text-align: right; color: var(--text); }
+.results-table td:first-child { text-align: left; color: var(--text-dim); font-size: 11px; font-family: var(--sans); }
+.results-table tr:last-child td { border-bottom: none; }
+.results-table .sec-row td { background: var(--bg3); color: var(--blue); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.3rem 0.75rem; border-bottom: 1px solid var(--border2); }
+.results-table .sec-row td:first-child { text-align: left; }
+.v-good { color: var(--green) !important; font-weight: 600; }
+.v-warn { color: var(--amber) !important; }
+.v-bad  { color: var(--red)   !important; font-weight: 600; }
+.v-neu  { color: var(--text)  !important; }
+.row-best td { background: #00e5a008; }
+.row-bad  td { background: #ff5e5e06; }
+.checklist { list-style: none; padding: 0; margin: 0.75rem 0; }
+.checklist li { padding: 0.5rem 0.875rem 0.5rem 2.25rem; position: relative; border-bottom: 1px solid var(--border); font-size: 14px; }
+.checklist li:last-child { border-bottom: none; }
+.checklist li::before { content: '□'; position: absolute; left: 0.75rem; color: var(--green); font-size: 14px; }
+.checklist-group { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; margin: 0.75rem 0; overflow: hidden; }
+.checklist-group-label { background: var(--bg3); font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; padding: 0.5rem 0.875rem; border-bottom: 1px solid var(--border); }
+.revert-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; padding: 1rem 1.125rem; margin-bottom: 0.625rem; }
+.revert-item .ri-title { font-weight: 600; color: var(--text-hi); margin-bottom: 5px; font-size: 14px; }
+.revert-item .ri-from { font-family: var(--mono); font-size: 11px; color: var(--green); margin-bottom: 3px; }
+.revert-item .ri-to   { font-family: var(--mono); font-size: 11px; color: var(--red);   margin-bottom: 5px; }
+.revert-item .ri-note { font-size: 12px; color: var(--text-dim); }
+.path { font-family: var(--mono); font-size: 12px; color: var(--amber); background: var(--amber-dim); border: 1px solid #ffb34720; border-radius: 3px; padding: 1px 6px; }
+footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Performance Troubleshooting Guide</div>
+    <h1>iRacing <span>Stutter Fix</span><br>for AMD Ryzen X3D + NVIDIA</h1>
+    <p class="hero-sub">A complete guide to diagnosing and eliminating frame time spikes in iRacing on systems running AMD Ryzen 7000/9000 X3D processors with NVIDIA discrete GPUs on triple-screen or single-screen setups.</p>
+    <div class="hero-specs">
+      <span class="spec-pill">AMD Ryzen X3D (7800X3D / 9800X3D)</span>
+      <span class="spec-pill">NVIDIA RTX GPU</span>
+      <span class="spec-pill">Windows 11</span>
+      <span class="spec-pill">iRacing DX11</span>
+      <span class="spec-pill">Triple Screen / Single Screen</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">01</span><span class="section-title">Understanding the Stutter Types</span><span class="section-tag tag-blue">DIAGNOSIS</span></div>
+  <p>iRacing stutters on this platform fall into two distinct types. Identifying which type you have determines the correct fix. Use <strong>CapFrameX</strong> (free) to capture frame time data and analyze the spike anatomy.</p>
+  <div class="finding-grid">
+    <div class="finding-card">
+      <div class="fc-label">Type A</div><div class="fc-title">GPU Scene Complexity Spike</div>
+      <div class="fc-row"><span class="fc-k">Frame −1 GPU active</span><span class="fc-v bad">28–35ms</span></div>
+      <div class="fc-row"><span class="fc-k">Spike frame FT</span><span class="fc-v bad">25–32ms</span></div>
+      <div class="fc-row"><span class="fc-k">Spike frame CPU</span><span class="fc-v">~3ms (fine)</span></div>
+      <div class="fc-row"><span class="fc-k">Spike frame GPU</span><span class="fc-v">~4ms (fine)</span></div>
+      <div class="fc-row"><span class="fc-k">Ripple frames</span><span class="fc-v warn">4–5 frames elevated</span></div>
+      <div class="fc-row"><span class="fc-k">Trigger</span><span class="fc-v">Complex corners, grandstands</span></div>
+    </div>
+    <div class="finding-card">
+      <div class="fc-label">Type B</div><div class="fc-title">CPU Sim Thread Preemption</div>
+      <div class="fc-row"><span class="fc-k">Frame −1 GPU active</span><span class="fc-v good">~4ms (normal)</span></div>
+      <div class="fc-row"><span class="fc-k">Spike frame FT</span><span class="fc-v bad">15–27ms</span></div>
+      <div class="fc-row"><span class="fc-k">Spike frame CPU</span><span class="fc-v bad">15–27ms</span></div>
+      <div class="fc-row"><span class="fc-k">Spike frame GPU</span><span class="fc-v good">~3ms (fine)</span></div>
+      <div class="fc-row"><span class="fc-k">Ripple frames</span><span class="fc-v good">1 frame, clean recovery</span></div>
+      <div class="fc-row"><span class="fc-k">Trigger</span><span class="fc-v">Any corner, no pattern</span></div>
+    </div>
+  </div>
+  <div class="callout info"><span class="callout-icon">ℹ</span><span><strong>Key insight:</strong> iRacing's sim thread is hardcoded to CPU 0. Any kernel interrupt (DPC) that also runs on CPU 0 will preempt the sim thread and cause a Type B stutter. NVIDIA GPU drivers generate high-frequency DPCs — by default on CPU 0.</span></div>
+  <div class="callout warn"><span class="callout-icon">⚠</span><span><strong>Tools needed:</strong> CapFrameX for frame time capture, LatencyMon (free, resplendence.com) for kernel interrupt diagnosis. Run both simultaneously during a session to correlate stutters with DPC events.</span></div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">02</span><span class="section-title">iRacing Graphics Settings</span><span class="section-tag tag-green">FIX TYPE A</span></div>
+  <p>These settings reduce GPU draw call load at complex corners, eliminating Type A spikes. Configure via <strong>iRSidekick Profiles</strong> or iRacing's own Options menu.</p>
+  <h3 style="color:var(--text-hi);font-family:var(--display);font-size:1rem;margin:1.25rem 0 0.6rem;">Monitor / Display Tab</h3>
+  <table class="settings-table">
+    <tr><th>Setting</th><th>Value</th><th>Notes</th></tr>
+    <tr><td class="s-key">Refresh Rate</td><td class="s-val">Match monitor max Hz</td><td class="s-note">Set to your monitor's maximum (144, 165, 240Hz). Running below max causes present timing mismatches with the frame cap.</td></tr>
+    <tr><td class="s-key">NVidia Reflex</td><td class="s-val">Off</td><td class="s-note">Reflex On+Boost manipulates the present queue and can cause stall patterns. Test Off first.</td></tr>
+    <tr><td class="s-key">NVidia SMP</td><td class="s-val">Enabled</td><td class="s-note">Keep enabled for multi-monitor setups.</td></tr>
+  </table>
+  <h3 style="color:var(--text-hi);font-family:var(--display);font-size:1rem;margin:1.25rem 0 0.6rem;">Graphics Tab</h3>
+  <table class="settings-table">
+    <tr><th>Setting</th><th>Value</th><th>Notes</th></tr>
+    <tr><td class="s-key">Frame Rate Limit</td><td class="s-val">Match Hz − 1</td><td class="s-note">e.g. 164fps for 165Hz, 239fps for 240Hz. Leave ~30% GPU headroom.</td></tr>
+    <tr><td class="s-key">MSAA Samples</td><td class="s-val">2x</td><td class="s-note">Dropping from 4x to 2x significantly reduces GPU load at corners with complex geometry.</td></tr>
+    <tr><td class="s-key">Crowds</td><td class="s-val">Off</td><td class="s-note">Grandstand crowd geometry is a major draw call source at busy corners.</td></tr>
+    <tr><td class="s-key">Shadow Maps &amp; Cloud Shadows</td><td class="s-val">Off</td><td class="s-note">Biggest single GPU spike contributor at complex scenes.</td></tr>
+    <tr><td class="s-key">Dynamic Objects</td><td class="s-val">Off</td><td class="s-note"></td></tr>
+    <tr><td class="s-key">Static Shadow Count</td><td class="s-val">2</td><td class="s-note">Default 3. Reduce to 2 if GPU spikes persist.</td></tr>
+    <tr><td class="s-key">Max Prerendered Frames</td><td class="s-val">1</td><td class="s-note">Reduces render queue depth, improves input latency.</td></tr>
+  </table>
+  <h3 style="color:var(--text-hi);font-family:var(--display);font-size:1rem;margin:1.25rem 0 0.6rem;">Extras Tab</h3>
+  <table class="settings-table">
+    <tr><th>Setting</th><th>Value</th><th>Notes</th></tr>
+    <tr><td class="s-key">Video mem swap high-res cars</td><td class="s-val">Unchecked</td><td class="s-note">Allows dynamic car texture streaming which causes GPU bursts when cars enter view. Uncheck to preload everything.</td></tr>
+    <tr><td class="s-key">Load paint textures while driving</td><td class="s-val">Checked</td><td class="s-note">Keep enabled.</td></tr>
+  </table>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">03</span><span class="section-title">app.ini Tweaks</span><span class="section-tag tag-green">FIX TYPE A</span></div>
+  <p>Location: <span class="path">Documents\iRacing\app.ini</span> — back up before editing. iRSidekick does not manage these keys so they survive profile switches.</p>
+  <p>Add or edit under the <span class="path">[Graphics]</span> section:</p>
+  <div class="code-block">carPreloadAll=1          <span class="code-comment">; Preload all car textures at session start</span>
+trackTexturePreload=1    <span class="code-comment">; Preload track assets at session start</span>
+streamingTextureSize=256 <span class="code-comment">; Reduce burst size for any streaming loads</span></div>
+  <p>Under the <span class="path">[Audio]</span> section:</p>
+  <div class="code-block">numSoundStreams=12        <span class="code-comment">; Cap audio streams (default -1 = unlimited)</span></div>
+  <div class="callout info"><span class="callout-icon">ℹ</span><span>Session load time will increase slightly with preloading enabled. This is expected — assets load once at session start rather than mid-lap.</span></div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">04</span><span class="section-title">NVIDIA Driver &amp; Control Panel</span><span class="section-tag tag-blue">FIX TYPE B</span></div>
+  <div class="steps">
+    <div class="step"><div class="step-body"><strong>Download latest driver</strong> from nvidia.com/drivers. Always use the most current Game Ready Driver.</div></div>
+    <div class="step"><div class="step-body"><strong>Run Custom Install.</strong> Uncheck: PhysX System Software, GeForce Experience, NVIDIA App, HD Audio. Only check: Display Driver. GFE adds DirectX hooks and unnecessary DPC interrupts.</div></div>
+    <div class="step"><div class="step-body"><strong>If GeForce Experience is already installed, uninstall it</strong> via Windows Settings → Apps.</div></div>
+  </div>
+  <h3 style="color:var(--text-hi);font-family:var(--display);font-size:1rem;margin:1.25rem 0 0.75rem;">NVIDIA Control Panel — iRacing Program Settings</h3>
+  <p>Manage 3D Settings → Program Settings → Add <span class="path">iRacingSim64DX11.exe</span></p>
+  <table class="settings-table">
+    <tr><th>Setting</th><th>Value</th><th>Notes</th></tr>
+    <tr><td class="s-key">Power Management Mode</td><td class="s-val">Prefer Maximum Performance</td><td class="s-note">Prevents GPU clock stepping during session.</td></tr>
+    <tr><td class="s-key">Low Latency Mode</td><td class="s-val">Ultra</td><td class="s-note">Reduces render queue depth.</td></tr>
+    <tr><td class="s-key">Threaded Optimization</td><td class="s-val">On</td><td class="s-note">Distributes NVIDIA driver work across cores rather than concentrating on CPU 0.</td></tr>
+    <tr><td class="s-key">Texture Filtering Quality</td><td class="s-val">High Performance</td><td class="s-note"></td></tr>
+    <tr><td class="s-key">Vertical Sync</td><td class="s-val">Off</td><td class="s-note">iRacing handles its own frame pacing.</td></tr>
+    <tr><td class="s-key">Shader Cache Size</td><td class="s-val">Unlimited</td><td class="s-note">Prevents shader recompilation mid-session.</td></tr>
+  </table>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">05</span><span class="section-title">NVIDIA Interrupt Affinity — Registry Fix</span><span class="section-tag tag-blue">FIX TYPE B — CRITICAL</span></div>
+  <p>This is the most impactful fix for Type B CPU stalls. By default, NVIDIA's kernel driver <span class="path">nvlddmkm.sys</span> services all GPU interrupts on CPU 0. Since iRacing's sim thread is also hardcoded to CPU 0, these DPC interrupts directly preempt the sim thread causing stutters. Moving NVIDIA interrupts to CPU 2 eliminates the competition entirely.</p>
+  <div class="callout warn"><span class="callout-icon">⚠</span><span>Registry edit. Run as Administrator. Requires reboot to take effect.</span></div>
+  <h3 style="color:var(--text-hi);font-family:var(--display);font-size:1rem;margin:1.25rem 0 0.75rem;">Step 1 — Find your GPU Device ID</h3>
+  <div class="code-block">wmic path Win32_PnPEntity where "Name like '%NVIDIA%'" get DeviceID,Name</div>
+  <p>Note the full DeviceID for your GPU — it looks like:</p>
+  <div class="code-block">PCI\VEN_10DE&DEV_XXXX&SUBSYS_XXXXXXXX&REV_XX\X&XXXXXXXX&X&XXXX</div>
+  <h3 style="color:var(--text-hi);font-family:var(--display);font-size:1rem;margin:1.25rem 0 0.75rem;">Step 2 — Apply Interrupt Affinity</h3>
+  <p>Replace <span class="path">YOUR_DEVICE_ID</span> with the full DeviceID from Step 1:</p>
+  <div class="code-block">reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f
+
+reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 04 /f</div>
+  <p>The value <strong>04</strong> is a bitmask — binary 00000100 = CPU 2. Reboot after applying.</p>
+  <div class="callout good"><span class="callout-icon">✓</span><span><strong>Expected result:</strong> CPU 0 DPC load drops ~75%. CPU 2 handles NVIDIA DPCs. Type B stutter magnitude reduces from 17–27ms to under 13ms or eliminated entirely.</span></div>
+  <h3 style="color:var(--text-hi);font-family:var(--display);font-size:1rem;margin:1.25rem 0 0.75rem;">To Revert</h3>
+  <div class="code-block">reg delete "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /f</div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">06</span><span class="section-title">AMD Ryzen Balanced Power Plan</span><span class="section-tag tag-amber">X3D SPECIFIC</span></div>
+  <p>The 7800X3D and 9800X3D require the <strong>AMD Ryzen Balanced</strong> power plan so firmware can dynamically prioritize V-Cache cores. Bitsum Highest Performance and Windows High Performance both disable this behavior.</p>
+  <div class="callout warn"><span class="callout-icon">⚠</span><span>Despite AMD chipset drivers being installed, this plan is often missing. Check with <span class="path">powercfg /list</span> — if absent, create it manually.</span></div>
+  <div class="steps">
+    <div class="step"><div class="step-body"><strong>Duplicate the Balanced plan</strong> — note the new GUID:
+<div class="code-block" style="margin-top:6px">powercfg /duplicatescheme 381b4222-f694-41f0-9685-ff5bb260df2e</div></div></div>
+    <div class="step"><div class="step-body"><strong>Name and configure it</strong> — replace &lt;GUID&gt; with your output:
+<div class="code-block" style="margin-top:6px">powercfg /changename &lt;GUID&gt; "AMD Ryzen Balanced"
+powercfg /setacvalueindex &lt;GUID&gt; 54533251-82be-4824-96c1-47b60b740d00 893dee8e-2bef-41e0-89c6-b55d0929964c 5
+powercfg /setacvalueindex &lt;GUID&gt; 54533251-82be-4824-96c1-47b60b740d00 bc5038f7-23e0-4960-96da-33abaf5935ec 100
+powercfg /setacvalueindex &lt;GUID&gt; 54533251-82be-4824-96c1-47b60b740d00 7f2f5cfa-f10c-4823-b5e1-e93ae85f46b5 1
+powercfg /setactive &lt;GUID&gt;</div></div></div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">07</span><span class="section-title">Process Lasso Configuration</span><span class="section-tag tag-blue">FIX TYPE B</span></div>
+  <div class="callout warn"><span class="callout-icon">⚠</span><span><strong>Important:</strong> iRacing uses EasyAntiCheat which blocks external CPU affinity changes. Do not set CPU affinity for iRacingSim64DX11.exe — it will fail. The NVIDIA interrupt affinity registry fix (Section 05) is the correct approach.</span></div>
+  <h3 style="color:var(--text-hi);font-family:var(--display);font-size:1rem;margin:1.25rem 0 0.75rem;">iRacingSim64DX11.exe — Right-click → Always</h3>
+  <table class="settings-table">
+    <tr><th>Setting</th><th>Value</th><th>Notes</th></tr>
+    <tr><td class="s-key">CPU Priority</td><td class="s-val">High</td><td class="s-note">Not Realtime.</td></tr>
+    <tr><td class="s-key">I/O Priority</td><td class="s-val">High</td><td class="s-note"></td></tr>
+    <tr><td class="s-key">Exclude from ProBalance</td><td class="s-val">Yes</td><td class="s-note">Critical — ProBalance must not throttle the sim process mid-session.</td></tr>
+  </table>
+  <h3 style="color:var(--text-hi);font-family:var(--display);font-size:1rem;margin:1.25rem 0 0.75rem;">Support Processes &amp; Overlays</h3>
+  <table class="settings-table">
+    <tr><th>Process</th><th>Setting</th><th>Value</th></tr>
+    <tr><td class="s-key">iRacingLocalServer64 / Service64</td><td class="s-key">CPU &amp; I/O Priority</td><td class="s-val">High</td></tr>
+    <tr><td class="s-key">CapFrameX, iOverlay</td><td class="s-key">Exclude from ProBalance</td><td class="s-val">Yes</td></tr>
+    <tr><td class="s-key">Discord.exe</td><td class="s-key">CPU Priority / Affinity</td><td class="s-val">Below Normal / Odd cores only</td></tr>
+  </table>
+  <p style="margin-top:0.75rem;">Options → Power → Active Power Profile → <strong>AMD Ryzen Balanced</strong></p>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">08</span><span class="section-title">LatencyMon Diagnosis</span><span class="section-tag tag-amber">DIAGNOSIS</span></div>
+  <p>LatencyMon (free at resplendence.com) identifies which kernel drivers cause DPC stalls. Run during a session to verify fixes.</p>
+  <div class="steps">
+    <div class="step"><div class="step-body"><strong>Launch iRacing</strong> and get on track through problem corners.</div></div>
+    <div class="step"><div class="step-body"><strong>Alt-Tab, run LatencyMon as Administrator.</strong> Click Play. Run at least 5 minutes.</div></div>
+    <div class="step"><div class="step-body"><strong>Check Drivers tab</strong> sorted by highest DPC execution time.</div></div>
+    <div class="step"><div class="step-body"><strong>Check Per CPU data.</strong> If CPU 0 handles over 90% of ISR/DPC work, apply Section 05.</div></div>
+  </div>
+  <table class="settings-table" style="margin-top:1rem;">
+    <tr><th>Finding</th><th>Meaning</th><th>Action</th></tr>
+    <tr><td class="s-key">nvlddmkm.sys highest DPC</td><td class="s-note">NVIDIA driver DPC too long</td><td class="s-note">Apply Section 05. Update driver.</td></tr>
+    <tr><td class="s-key">CPU 0 handling all ISRs</td><td class="s-note">Interrupt affinity not set</td><td class="s-note">Apply Section 05 registry fix.</td></tr>
+    <tr><td class="s-key">tiworker.exe pagefaults</td><td class="s-note">Windows Update running</td><td class="s-note">Stop wuauserv before sessions.</td></tr>
+    <tr><td class="s-key">msmpeng.exe pagefaults</td><td class="s-note">Defender scanning iRacing</td><td class="s-note">Add Defender exclusions.</td></tr>
+  </table>
+  <div class="callout good"><span class="callout-icon">✓</span><span>Healthy baseline: NVIDIA worst DPC under 900µs. DPC count over 1000µs = 0. Hard pagefaults under 500 total. CPU 2 handling elevated DPC load is expected and correct after applying the registry fix.</span></div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">09</span><span class="section-title">Pre-Launch Service Stops</span><span class="section-tag tag-green">FIX TYPE B</span></div>
+  <p>Stopping background Windows services before sessions reduced hard pagefaults by 97% in testing. Run as Administrator before each session.</p>
+  <div class="code-block"><span class="code-comment">:: Stop before racing</span>
+sc stop wuauserv & sc stop UsoSvc & sc stop WSearch & sc stop SysMain
+sc stop Spooler & sc stop WlanSvc & sc stop XblAuthManager
+sc stop BthAvctpSvc & sc stop BTAGService & sc stop bthserv
+powercfg /setactive YOUR-AMD-RYZEN-BALANCED-GUID</div>
+  <div class="code-block"><span class="code-comment">:: Restore after racing</span>
+sc start wuauserv & sc start UsoSvc & sc start WSearch & sc start SysMain
+sc start Spooler & sc start WlanSvc & sc start XblAuthManager
+sc start bthserv & sc start BthAvctpSvc & sc start BTAGService</div>
+  <h3 style="color:var(--text-hi);font-family:var(--display);font-size:1rem;margin:1.25rem 0 0.75rem;">Windows Defender Exclusions</h3>
+  <div class="code-block">Add-MpPreference -ExclusionPath "C:\Program Files (x86)\iRacing"
+Add-MpPreference -ExclusionPath "$env:USERPROFILE\Documents\iRacing"</div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">10</span><span class="section-title">Results — Before &amp; After</span><span class="section-tag tag-green">DATA</span></div>
+  <p>All captures at 164fps cap, triple 2560×1440, AMD Ryzen 7 7800X3D, RTX 4090. Spike threshold: over 12.2ms (2× the 6.1ms target frame time).</p>
+  <table class="results-table">
+    <tr><th>Configuration</th><th>Avg</th><th>StDev</th><th>P99</th><th>P99.9</th><th>Worst</th><th>Spikes</th></tr>
+    <tr class="sec-row"><td colspan="7">Baseline — No fixes applied</td></tr>
+    <tr class="row-bad"><td>GPU burst stutter (Type A)</td><td>6.10</td><td>0.33</td><td>6.92</td><td>7.41</td><td class="v-bad">27.62ms</td><td class="v-bad">1/120s</td></tr>
+    <tr class="row-bad"><td>Complex track, no fixes</td><td>6.10</td><td>0.43</td><td>7.07</td><td>7.65</td><td class="v-bad">32.10ms</td><td class="v-bad">2/68s</td></tr>
+    <tr class="sec-row"><td colspan="7">After graphics settings tuning (Type A fixes)</td></tr>
+    <tr><td>MSAA 2x, crowds off, mem swap off</td><td>6.10</td><td>0.35</td><td>7.07</td><td>7.63</td><td class="v-warn">8.43ms</td><td class="v-neu">0/120s</td></tr>
+    <tr class="sec-row"><td colspan="7">After driver update + correct Hz + Reflex off</td></tr>
+    <tr><td>New driver, correct refresh rate, Reflex off</td><td>6.08</td><td>0.32</td><td>6.93</td><td>7.36</td><td class="v-warn">17.14ms</td><td class="v-warn">1/300s</td></tr>
+    <tr class="sec-row"><td colspan="7">After NVIDIA interrupt affinity + Process Lasso + services stopped</td></tr>
+    <tr class="row-best"><td>Full fix applied — session 1</td><td>6.08</td><td>0.33</td><td>6.98</td><td class="v-good">7.49ms</td><td class="v-good">8.80ms</td><td class="v-good">0/300s</td></tr>
+    <tr class="row-best"><td>Full fix applied — session 2</td><td>6.08</td><td>0.35</td><td>7.02</td><td>7.62</td><td class="v-good">10.84ms</td><td class="v-good">0/300s</td></tr>
+    <tr class="row-best"><td>Full fix applied — session 3</td><td>6.08</td><td>0.40</td><td>7.15</td><td>7.76</td><td class="v-good">8.95ms</td><td class="v-good">0/300s</td></tr>
+    <tr class="row-best"><td>Full fix applied — session 4</td><td>6.08</td><td>0.54</td><td>7.65</td><td>8.47</td><td class="v-good">10.61ms</td><td class="v-good">0/300s</td></tr>
+  </table>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-label"><span class="section-num">11</span><span class="section-title">Fresh Build Checklist</span><span class="section-tag tag-amber">REFERENCE</span></div>
+  <div class="checklist-group">
+    <div class="checklist-group-label">Windows &amp; Drivers</div>
+    <ul class="checklist">
+      <li>Run all Windows Updates before installing anything else</li>
+      <li>Install AMD chipset drivers — verify AMD Ryzen Balanced appears in powercfg /list</li>
+      <li>Install NVIDIA display driver only (custom install, uncheck GFE, PhysX, NVIDIA App)</li>
+      <li>Disable WiFi adapter in Device Manager if on wired ethernet</li>
+      <li>Add Windows Defender exclusions for iRacing install and Documents\iRacing</li>
+    </ul>
+  </div>
+  <div class="checklist-group">
+    <div class="checklist-group-label">Power &amp; Performance</div>
+    <ul class="checklist">
+      <li>Create AMD Ryzen Balanced power plan (Section 06) — note the GUID</li>
+      <li>Install Process Lasso — start with Windows — set AMD Ryzen Balanced as power profile</li>
+      <li>Configure Process Lasso per Section 07 — exclude iRacing sim from ProBalance</li>
+    </ul>
+  </div>
+  <div class="checklist-group">
+    <div class="checklist-group-label">NVIDIA Interrupt Affinity</div>
+    <ul class="checklist">
+      <li>Find GPU Device ID via wmic command (Section 05)</li>
+      <li>Apply interrupt affinity registry fix (Section 05)</li>
+      <li>Reboot and verify with LatencyMon — CPU 2 should show elevated DPC activity</li>
+    </ul>
+  </div>
+  <div class="checklist-group">
+    <div class="checklist-group-label">iRacing Configuration</div>
+    <ul class="checklist">
+      <li>Apply graphics settings from Section 02</li>
+      <li>Edit app.ini — add texture preload and sound stream keys (Section 03)</li>
+      <li>Frame cap = monitor Hz − 1. Confirm C-States disabled in BIOS. EXPO/XMP enabled for RAM.</li>
+    </ul>
+  </div>
+  <div class="checklist-group">
+    <div class="checklist-group-label">Pre-Session Routine</div>
+    <ul class="checklist">
+      <li>Run pre-launch script as Administrator (stops background services)</li>
+      <li>Confirm Process Lasso running in system tray</li>
+      <li>Wait at least one full lap before starting CapFrameX captures</li>
+    </ul>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  iRacing Stutter Fix Guide — AMD Ryzen X3D + NVIDIA GPU — Windows 11<br>
+  Community troubleshooting guide. Results may vary by system configuration.
+</footer>
+</body>
+</html>
