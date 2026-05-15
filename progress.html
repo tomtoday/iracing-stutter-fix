@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iRacing Stutter Resolution — Progress Report</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap');
+:root{--bg:#0d0f14;--bg2:#141720;--bg3:#1c2030;--border:#2a2f42;--accent:#4af0a0;--accent2:#4a90f0;--warn:#f0b84a;--danger:#f05a4a;--text:#c8d0e0;--text-dim:#6a7490;--text-hi:#eef2ff;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+.hdr{border-bottom:1px solid var(--border);padding-bottom:1.5rem;margin-bottom:2rem;}
+.lbl{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.4rem;}
+h1{font-size:1.8rem;font-weight:700;color:var(--text-hi);}
+.sub{color:var(--text-dim);font-size:12px;margin-top:.4rem;font-family:var(--mono);}
+h2{font-size:1rem;font-weight:600;color:var(--text-hi);margin:2rem 0 .75rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);}
+p{margin-bottom:.75rem;}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:1rem 0 2rem;}
+.sb{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:.875rem 1rem;text-align:center;}
+.sb .n{font-size:11px;color:var(--text-dim);margin-bottom:4px;}
+.sb .b{font-size:18px;font-weight:600;color:var(--danger);}
+.sb .a{font-size:18px;font-weight:600;color:var(--accent);}
+.sb .arr{font-size:12px;color:var(--text-dim);margin:2px 0;}
+.tw{margin:1rem 0 2rem;}
+.tl{display:flex;gap:1rem;margin-bottom:.5rem;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:4px;font-size:13px;}
+.tl.ch{border-left-color:var(--accent2);}
+.tl.fi{border-left-color:var(--warn);}
+.tl.re{border-left-color:var(--accent);}
+.tl.is{border-left-color:var(--danger);}
+.td{font-family:var(--mono);font-size:11px;color:var(--text-dim);min-width:55px;padding-top:1px;}
+.tb{flex:1;} .tb strong{color:var(--text-hi);}
+table{width:100%;border-collapse:collapse;font-size:12px;font-family:var(--mono);margin:1rem 0;}
+th{font-size:10px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;padding:.4rem .75rem;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;}
+th:first-child,th:nth-child(2){text-align:left;}
+td{padding:.4rem .75rem;border-bottom:1px solid var(--border);text-align:right;color:var(--text);}
+td:first-child{text-align:left;color:var(--text-dim);font-size:11px;font-family:var(--sans);}
+td:nth-child(2){text-align:left;font-size:11px;color:var(--text-dim);}
+tr:last-child td{border-bottom:none;}
+.sc td{background:var(--bg3);color:var(--accent2);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .75rem;border-bottom:1px solid var(--border);}
+.sc td:first-child{text-align:left;}
+.gd{color:var(--accent)!important;font-weight:600;} .wn{color:var(--warn)!important;} .bd{color:var(--danger)!important;font-weight:600;} .nu{color:var(--text)!important;}
+.rb td{background:#00e5a008;} .rd td{background:#ff5e5e06;}
+.lg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:1rem 0 1.5rem;}
+.lc{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:.875rem 1rem;}
+.ll{font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;}
+.lt{font-size:13px;font-weight:600;color:var(--text-hi);margin-bottom:8px;}
+.lr{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;margin-bottom:3px;}
+.lk{color:var(--text-dim);} .lv{color:var(--text);}
+.lv.gd{color:var(--accent);font-weight:600;} .lv.bd{color:var(--danger);font-weight:600;} .lv.wn{color:var(--warn);}
+.pt td:first-child{text-align:left;font-family:var(--sans);color:var(--text);}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:2px;letter-spacing:.06em;}
+.bg{color:var(--accent);background:rgba(74,240,160,.08);border:1px solid rgba(74,240,160,.2);}
+.ba{color:var(--warn);background:rgba(240,184,74,.08);border:1px solid rgba(240,184,74,.2);}
+.br{color:var(--danger);background:rgba(240,90,74,.08);border:1px solid rgba(240,90,74,.2);}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text-dim);display:flex;justify-content:space-between;}
+small{font-size:11px;color:var(--text-dim);}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="lbl">Performance Optimization Progress Report</div>
+  <h1>iRacing Stutter Resolution — May 11–14, 2026</h1>
+  <div class="sub">SIMRACER · 7800X3D · RTX 4090 · Triple 2560x1440 240Hz · 164fps cap · 24 capture sessions</div>
+</div>
+
+<h2>Key Improvements</h2>
+<div class="sg">
+  <div class="sb"><div class="n">Worst Frame Time</div><div class="b">32.10ms</div><div class="arr">↓ 67%</div><div class="a">10.71ms</div></div>
+  <div class="sb"><div class="n">Spikes &gt;12ms / 5min</div><div class="b">2–3 spikes</div><div class="arr">↓ 100%</div><div class="a">0 spikes</div></div>
+  <div class="sb"><div class="n">Hard Pagefaults</div><div class="b">70,000+</div><div class="arr">↓ 97%</div><div class="a">~2,000</div></div>
+  <div class="sb"><div class="n">NVIDIA Interrupt Fix</div><div class="b">CPU 0 dominant</div><div class="arr">in progress</div><div class="a">MSI limitation</div></div>
+</div>
+
+<h2>Change Timeline</h2>
+<div class="tw">
+  <div class="tl ch"><div class="td">May 11</div><div class="tb"><strong>Starting point:</strong> 164fps cap, C-States disabled, Process Lasso unconfigured. Two stutter types identified via CapFrameX: Type A (GPU burst, prev frame GPU 29–35ms) and Type B (CPU preemption, sim thread stalled 15–27ms).</div></div>
+  <div class="tl ch"><div class="td">May 11</div><div class="tb"><strong>Video mem swap high-res cars disabled.</strong> Eliminated dynamic car texture streaming causing GPU bursts when cars entered view.</div></div>
+  <div class="tl ch"><div class="td">May 11</div><div class="tb"><strong>MSAA 4x→2x, Crowds Off.</strong> Reduced GPU draw call load at complex corners. Partially resolved Type A spikes.</div></div>
+  <div class="tl ch"><div class="td">May 11</div><div class="tb"><strong>app.ini — carPreloadAll=1, trackTexturePreload=1, streamingTextureSize=256.</strong> Reduces mid-session asset streaming bursts.</div></div>
+  <div class="tl ch"><div class="td">May 12</div><div class="tb"><strong>Refresh rate corrected 120Hz→240Hz.</strong> Samsung LS32BG652 supports 240Hz. Running below max caused present timing mismatches with 164fps cap.</div></div>
+  <div class="tl ch"><div class="td">May 12</div><div class="tb"><strong>NVIDIA driver updated to 596.49, NVidia Reflex → Off, NVIDIA Control Panel configured:</strong> Low Latency Ultra, Power Management Max, Threaded Optimization On, Shader Cache Unlimited.</div></div>
+  <div class="tl ch"><div class="td">May 13</div><div class="tb"><strong>AMD Ryzen Balanced power plan created manually.</strong> GUID: c584c850-222a-4f65-ae2c-fe6e5b7a0c40. Set in Process Lasso power profile.</div></div>
+  <div class="tl ch"><div class="td">May 13</div><div class="tb"><strong>Process Lasso configured:</strong> iRacingSim64DX11 High CPU/IO, excluded from ProBalance. CapFrameX and iOverlay excluded from ProBalance. Discord pinned to odd cores at Below Normal priority.</div></div>
+  <div class="tl fi"><div class="td">May 13</div><div class="tb"><strong>LatencyMon finding:</strong> CPU 0 handling 473,907 ISRs and 43.2s DPC work per 6-minute session. nvlddmkm.sys DPCs up to 1,543µs. iRacing sim thread hardcoded to CPU 0 — NVIDIA interrupts competing directly.</div></div>
+  <div class="tl ch"><div class="td">May 13</div><div class="tb"><strong>GeForce Experience uninstalled.</strong> nvcontainer.exe adding DirectX hooks and background DPC load.</div></div>
+  <div class="tl ch"><div class="td">May 13</div><div class="tb"><strong>Windows Defender exclusions added</strong> for iRacing install and Documents\iRacing.</div></div>
+  <div class="tl ch"><div class="td">May 13</div><div class="tb"><strong>Background services DISABLED before sessions</strong> (wuauserv, UsoSvc, WSearch restart themselves if only stopped). Hard pagefaults dropped from 70,000+ to ~2,000 when properly disabled.</div></div>
+  <div class="tl fi"><div class="td">May 13</div><div class="tb"><strong>NVIDIA interrupt affinity root cause:</strong> RTX 4090 runs in MSI (not MSI-X) mode. Windows 11 overrides LineBased MSI affinity settings. Three device instances — Windows switches between them on reboot. Registry fix and GoInterruptPolicy both unreliable.</div></div>
+  <div class="tl is"><div class="td">May 13</div><div class="tb"><strong>RTSS (RivaTuner Statistics Server) discovered running</strong> as CapFrameX overlay dependency. Caused 49,517–53,904 hard pagefaults per session and elevated dxgkrnl.sys DPCs. Directly responsible for 3 spikes in Cap21.</div></div>
+  <div class="tl ch"><div class="td">May 14</div><div class="tb"><strong>RTSS uninstalled.</strong> CapFrameX runs without overlay — JSON capture still works. iOverlay confirmed working independently without RTSS.</div></div>
+  <div class="tl re"><div class="td">May 14</div><div class="tb"><strong>Current state:</strong> CapFrameX clean — zero spikes, worst 10.71ms (Cap24). LatencyMon shows elevated CPU 0 DPC load but CapFrameX not showing corresponding spikes. Next: AutoGpuAffinity, iOverlay isolation test.</div></div>
+</div>
+
+<h2>All 24 CapFrameX Sessions</h2>
+<table>
+  <tr><th>#</th><th>Notes</th><th>Dur</th><th>Avg</th><th>StDev</th><th>P99</th><th>P99.9</th><th>Worst</th><th>Spikes</th></tr>
+  <tr class="sc"><td colspan="9">May 11 — Baseline &amp; Graphics Tuning</td></tr>
+  <tr><td>Cap1</td><td>Baseline — 164cap, cstate off</td><td>120s</td><td>6.10</td><td class="nu">0.29</td><td>6.88</td><td>7.35</td><td class="nu">7.72</td><td class="nu">0</td></tr>
+  <tr class="rd"><td>Cap2</td><td>GPU burst stutter — problem corner</td><td>120s</td><td>6.10</td><td>0.33</td><td>6.92</td><td>7.41</td><td class="bd">27.62</td><td class="bd">1</td></tr>
+  <tr><td>Cap3</td><td>Short clean run</td><td>46s</td><td>6.10</td><td>0.29</td><td>6.89</td><td>7.29</td><td class="nu">11.36</td><td class="nu">0</td></tr>
+  <tr><td>Cap4</td><td>Video mem swap disabled</td><td>98s</td><td>6.10</td><td>0.32</td><td>6.96</td><td>7.44</td><td class="nu">9.49</td><td class="nu">0</td></tr>
+  <tr class="rd"><td>Cap5</td><td>Post-crash reset CPU stall (init noise)</td><td>15s</td><td>6.11</td><td>0.55</td><td>7.06</td><td>11.34</td><td class="bd">25.12</td><td class="bd">1</td></tr>
+  <tr class="rd"><td>Cap6</td><td>New track, MSAA 2x, crowds off</td><td>120s</td><td>6.10</td><td>0.39</td><td>7.09</td><td>7.72</td><td class="bd">30.48</td><td class="bd">2</td></tr>
+  <tr class="rd"><td>Cap7</td><td>New track continued</td><td>68s</td><td>6.10</td><td>0.43</td><td>7.07</td><td>7.65</td><td class="bd">32.10</td><td class="bd">2</td></tr>
+  <tr class="rd"><td>Cap8</td><td>Further settings tuning</td><td>120s</td><td>6.10</td><td>0.39</td><td>7.10</td><td>7.65</td><td class="bd">28.85</td><td class="bd">2</td></tr>
+  <tr class="rb"><td>Cap9</td><td>Clean session</td><td>120s</td><td>6.10</td><td>0.35</td><td>7.07</td><td>7.63</td><td class="gd">8.43</td><td class="gd">0</td></tr>
+  <tr class="rb"><td>Cap10</td><td>Clean session</td><td>81s</td><td>6.10</td><td>0.36</td><td>7.09</td><td>7.68</td><td class="gd">8.05</td><td class="gd">0</td></tr>
+  <tr class="sc"><td colspan="9">May 12 — Driver Update, Reflex, 240Hz</td></tr>
+  <tr class="rd"><td>Cap11</td><td>New track, solo practice</td><td>300s</td><td>6.10</td><td>0.41</td><td>7.19</td><td>7.95</td><td class="bd">28.34</td><td class="bd">1</td></tr>
+  <tr class="rd"><td>Cap12</td><td>Reflex On+Boost, old driver</td><td>300s</td><td>6.10</td><td>0.34</td><td>6.98</td><td>7.62</td><td class="bd">24.73</td><td class="bd">2</td></tr>
+  <tr class="rd"><td>Cap13</td><td>Reflex On (not Boost)</td><td>300s</td><td>6.10</td><td>0.37</td><td>7.04</td><td>7.61</td><td class="bd">27.75</td><td class="bd">3</td></tr>
+  <tr><td>Cap14</td><td>Reflex Off, driver 596.49, 240Hz</td><td>300s</td><td>6.08</td><td>0.32</td><td>6.93</td><td>7.36</td><td class="wn">17.14</td><td class="wn">1</td></tr>
+  <tr class="sc"><td colspan="9">May 13 — Interrupt Affinity, Process Lasso, Services</td></tr>
+  <tr class="rb"><td>Cap15</td><td>NVIDIA affinity registry + PL fixes</td><td>300s</td><td>6.08</td><td>0.33</td><td>6.98</td><td>7.59</td><td class="gd">8.80</td><td class="gd">0</td></tr>
+  <tr class="rb"><td>Cap16</td><td>GFE uninstalled</td><td>300s</td><td>6.08</td><td>0.35</td><td>7.02</td><td>7.62</td><td class="gd">10.84</td><td class="gd">0</td></tr>
+  <tr class="rb"><td>Cap17</td><td>Services disabled before session</td><td>300s</td><td>6.08</td><td>0.40</td><td>7.15</td><td>7.76</td><td class="gd">8.95</td><td class="gd">0</td></tr>
+  <tr><td>Cap18</td><td>Oulton Park GR86 — post full lap</td><td>300s</td><td>6.08</td><td>0.35</td><td>6.98</td><td class="gd">7.49</td><td class="wn">12.38</td><td class="wn">1</td></tr>
+  <tr class="rb"><td>Cap19</td><td>Best LatencyMon (114 pagefaults)</td><td>300s</td><td>6.08</td><td>0.54</td><td>7.65</td><td>8.47</td><td class="gd">10.61</td><td class="gd">0</td></tr>
+  <tr class="rb"><td>Cap20</td><td>GoInterruptPolicy attempt 1</td><td>300s</td><td>6.08</td><td>0.48</td><td>7.57</td><td>8.32</td><td class="gd">10.70</td><td class="gd">0</td></tr>
+  <tr class="rd"><td>Cap21</td><td>RTSS discovered running — 3 spikes</td><td>300s</td><td>6.08</td><td>0.47</td><td>7.48</td><td>8.34</td><td class="bd">24.83</td><td class="bd">3</td></tr>
+  <tr class="rd"><td>Cap22</td><td>GoInterruptPolicy PCI0022 set</td><td>300s</td><td>6.08</td><td>0.46</td><td>7.48</td><td>8.32</td><td class="bd">20.60</td><td class="bd">2</td></tr>
+  <tr class="sc"><td colspan="9">May 14 — RTSS Removed</td></tr>
+  <tr class="rd"><td>Cap23</td><td>RTSS still active via CapFrameX overlay</td><td>300s</td><td>6.08</td><td>0.51</td><td>7.62</td><td>8.39</td><td class="bd">27.12</td><td class="bd">3</td></tr>
+  <tr class="rb"><td>Cap24</td><td>RTSS uninstalled — iOverlay only</td><td>300s</td><td>6.08</td><td>0.54</td><td>7.62</td><td>8.52</td><td class="gd">10.71</td><td class="gd">0</td></tr>
+</table>
+
+<h2>LatencyMon Session Comparison</h2>
+<div class="lg">
+  <div class="lc"><div class="ll">May 13 Session 1 — Pre-fix</div><div class="lt">Before Any Interrupt Work</div>
+    <div class="lr"><span class="lk">Duration</span><span class="lv">6:21</span></div>
+    <div class="lr"><span class="lk">CPU 0 DPC total</span><span class="lv bd">43.2s</span></div>
+    <div class="lr"><span class="lk">NVIDIA worst DPC</span><span class="lv bd">1,543µs</span></div>
+    <div class="lr"><span class="lk">DPCs &gt;1000µs</span><span class="lv bd">4</span></div>
+    <div class="lr"><span class="lk">Hard pagefaults</span><span class="lv bd">32,435</span></div>
+    <div class="lr"><span class="lk">Top pagefaulter</span><span class="lv bd">tiworker.exe</span></div>
+  </div>
+  <div class="lc"><div class="ll">May 13 Best — Services Disabled</div><div class="lt">Services Stopped, GFE Gone</div>
+    <div class="lr"><span class="lk">Duration</span><span class="lv">9:07</span></div>
+    <div class="lr"><span class="lk">CPU 0 DPC total</span><span class="lv wn">10.1s</span></div>
+    <div class="lr"><span class="lk">NVIDIA worst DPC</span><span class="lv wn">1,628µs</span></div>
+    <div class="lr"><span class="lk">DPCs &gt;1000µs</span><span class="lv gd">6</span></div>
+    <div class="lr"><span class="lk">Hard pagefaults</span><span class="lv gd">2,107</span></div>
+    <div class="lr"><span class="lk">CapFrameX spikes</span><span class="lv gd">0</span></div>
+  </div>
+  <div class="lc"><div class="ll">May 14 — RTSS Removed</div><div class="lt">After RTSS Uninstall</div>
+    <div class="lr"><span class="lk">Duration</span><span class="lv">8:53</span></div>
+    <div class="lr"><span class="lk">CPU 0 DPC total</span><span class="lv bd">63.0s</span></div>
+    <div class="lr"><span class="lk">Top DPC driver</span><span class="lv wn">dxgkrnl.sys*</span></div>
+    <div class="lr"><span class="lk">DPCs &gt;1000µs</span><span class="lv wn">21</span></div>
+    <div class="lr"><span class="lk">Hard pagefaults</span><span class="lv wn">71,467†</span></div>
+    <div class="lr"><span class="lk">CapFrameX spikes</span><span class="lv gd">0</span></div>
+  </div>
+</div>
+<p><small>* dxgkrnl.sys replacing nvlddmkm.sys after RTSS removal — iOverlay DirectX hooks suspected. † Services may not have been fully disabled this session.</small></p>
+
+<h2>Pending Items</h2>
+<table class="pt">
+  <tr><th>Item</th><th>Status</th><th>Priority</th></tr>
+  <tr><td>AutoGpuAffinity — benchmark-based core selection for GPU interrupt</td><td><span class="badge ba">Next test</span></td><td>High</td></tr>
+  <tr><td>iOverlay DirectX hook isolation — test without iOverlay to confirm dxgkrnl.sys cause</td><td><span class="badge ba">Pending</span></td><td>High</td></tr>
+  <tr><td>Real race test with AI cars present</td><td><span class="badge ba">Pending</span></td><td>High</td></tr>
+  <tr><td>rendererDX11Monitor.ini — StaticShadowNumber 3→2, side monitor CrowdDetail 2→0</td><td><span class="badge ba">Pending edit</span></td><td>Medium</td></tr>
+  <tr><td>app.ini — numSoundStreams -1→12</td><td><span class="badge ba">Pending edit</span></td><td>Low</td></tr>
+  <tr><td>NVIDIA MSI interrupt affinity — persistent solution</td><td><span class="badge br">Unresolved</span></td><td>High</td></tr>
+  <tr><td>Cowork project setup for automated log analysis</td><td><span class="badge bg">Planned</span></td><td>Low</td></tr>
+</table>
+
+<footer>
+  <span>iRacing Stutter Progress Report — SIMRACER</span>
+  <span>Last updated May 14, 2026 — 24 sessions</span>
+</footer>
+</body>
+</html>
