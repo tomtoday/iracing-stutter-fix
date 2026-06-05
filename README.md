@@ -11,6 +11,7 @@ iRacing on AMD Ryzen 7000/9000 **X3D** systems paired with NVIDIA GPUs on Window
 | [`index.html`](index.html) | Landing page — overview, results summary, script downloads |
 | [`guide.html`](guide.html) | The full guide — diagnostic decision tree, fixes A–F, checklists, revert reference |
 | [`progress.html`](progress.html) | Capture-by-capture research log |
+| [`find_my_values.bat`](find_my_values.bat) | Run **once** during setup — prints the per-machine values for the CONFIG block (read-only) |
 | [`pre_iracing_launch.bat`](pre_iracing_launch.bat) | Run **before** racing — applies the optimizations |
 | [`post_iracing_session.bat`](post_iracing_session.bat) | Run **after** racing — restores everything the pre-launch script changed |
 
@@ -25,11 +26,12 @@ iRacing on AMD Ryzen 7000/9000 **X3D** systems paired with NVIDIA GPUs on Window
 > re-enable updates and services. Leaving Windows Update disabled indefinitely is a
 > security risk.
 
-1. The scripts contain **system-specific values** (NVIDIA device IDs, AMD power-plan GUID,
-   driver version). Edit the `CONFIG` block at the top of `pre_iracing_launch.bat` with
-   your own values before first use — see the guide for how to find each one.
-2. Run both scripts **as Administrator**.
-3. `pre_iracing_launch.bat` before you race; `post_iracing_session.bat` when you're done.
+1. Run `find_my_values.bat` once. It prints your NVIDIA device IDs, AMD power-plan GUID,
+   and driver version (it changes nothing).
+2. Paste those into the `CONFIG` block at the top of `pre_iracing_launch.bat`, replacing
+   the example values. The guide explains each one in more detail.
+3. Run the racing scripts **as Administrator**: `pre_iracing_launch.bat` before you race,
+   `post_iracing_session.bat` when you're done.
 
 ## Notes
 
