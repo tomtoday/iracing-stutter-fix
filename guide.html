@@ -181,6 +181,13 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-fa
 
 /* COPY BUTTON BEHAVIOR */
 .copied{color:var(--green)!important;}
+
+/* ANCHOR LINKS */
+.section,h3,h4{scroll-margin-top:1.25rem;}
+.anchor-link{opacity:0;margin-left:.45em;color:var(--text-dim);text-decoration:none;font-weight:400;transition:opacity .15s,color .15s;}
+.anchor-link:hover{color:var(--green);}
+.section-title:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1;}
+h3:target,h4:target,.section:target .section-title{color:var(--green);}
 </style>
 </head>
 <body>
@@ -998,6 +1005,36 @@ function copyCode(btn) {
     setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
   });
 }
+
+// Add clickable permalink anchors to every section and subsection heading.
+(function () {
+  function slug(t) {
+    return t.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+  }
+  function addAnchor(el, id) {
+    const a = document.createElement('a');
+    a.className = 'anchor-link';
+    a.href = '#' + id;
+    a.textContent = '#';
+    a.setAttribute('aria-label', 'Permalink to this section');
+    el.appendChild(a);
+  }
+  // Sections already have ids (s0..s12) used by the table of contents.
+  document.querySelectorAll('.section[id]').forEach(sec => {
+    const title = sec.querySelector('.section-title');
+    if (title) addAnchor(title, sec.id);
+  });
+  // Subsections have no ids — generate readable, unique ones from their text.
+  document.querySelectorAll('.container h3, .container h4').forEach(h => {
+    if (!h.id) {
+      let base = slug(h.textContent) || 'section';
+      let id = base, n = 2;
+      while (document.getElementById(id)) id = base + '-' + n++;
+      h.id = id;
+    }
+    addAnchor(h, h.id);
+  });
+})();
 </script>
 </body>
 </html>
