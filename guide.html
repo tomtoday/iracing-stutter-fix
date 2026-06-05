@@ -541,6 +541,21 @@ reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters
     <li><strong>DevicePriority = 3</strong> — High interrupt priority</li>
   </ul>
 
+  <h4>Choosing your target core</h4>
+  <p>CPU 0 is where iRacing's sim thread runs, so the goal is to land GPU interrupts on a different <strong>physical</strong> core. With SMT enabled, logical CPUs pair up by core — on an 8-core Ryzen: 0/1 = core 0, 2/3 = core 1, 4/5 = core 2, and so on. Avoid CPU 1 specifically — it's CPU 0's SMT sibling on the same physical core, so interrupts there still contend with the sim thread. CPU 4 (first thread of core 2) is a sensible default, but it is <strong>not guaranteed optimal</strong>; the best core varies by system. X3D chips are single-CCD, so every core shares the V-cache — the choice is about dodging busy cores, not cache locality.</p>
+  <div class="callout info"><span class="ci">ℹ</span><span>To find the best core for your machine, benchmark it with <strong>AutoGpuAffinity</strong> (github.com/valleyofdoom/AutoGpuAffinity) — it tests each core and reports the one with the lowest frame times. Then confirm with LatencyMon that DPC load actually moved off CPU 0.</span></div>
+
+  <h4>Computing the AssignmentSetOverride mask</h4>
+  <p>The value is a bitmask — one bit per logical CPU, computed as <span class="path">1 &lt;&lt; cpu_number</span> and written in hex:</p>
+  <table class="st">
+    <tr><th>Target CPU</th><th>Hex value</th><th>Notes</th></tr>
+    <tr><td class="sk">CPU 2</td><td class="sv">04</td><td class="sn">core 1, thread 0</td></tr>
+    <tr><td class="sk">CPU 4</td><td class="sv">10</td><td class="sn">core 2, thread 0 — default in this guide</td></tr>
+    <tr><td class="sk">CPU 6</td><td class="sv">40</td><td class="sn">core 3, thread 0</td></tr>
+    <tr><td class="sk">CPU 8</td><td class="sv">0001</td><td class="sn">little-endian — see warning</td></tr>
+  </table>
+  <div class="callout warn"><span class="ci">⚠</span><span>One byte (two hex digits) covers CPU 0–7. Targeting <strong>CPU 8 or higher</strong> requires a multi-byte value in <strong>little-endian</strong> order, which is easy to get wrong by hand — e.g. CPU 8 is <span class="path">0001</span>, not <span class="path">0100</span> (which would target CPU 0 and bring the stutter back). Let AutoGpuAffinity write these for you, and always verify in LatencyMon.</span></div>
+
   <p>Reboot after applying. Verify with LatencyMon — CPU 4 should now show elevated DPC activity.</p>
 
   <h3>Step 3 — GoInterruptPolicy (alternative / supplement)</h3>
