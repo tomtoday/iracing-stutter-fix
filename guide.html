@@ -503,68 +503,80 @@ Add-MpPreference -ExclusionPath "$env:USERPROFILE\Documents\iRacing"</div>
 
   <p>By default, NVIDIA's kernel driver (<span class="path">nvlddmkm.sys</span>) services all GPU interrupts on CPU 0 — the same core iRacing's sim thread is hardcoded to. Moving NVIDIA interrupts to a different core eliminates this competition.</p>
 
-  <div class="callout info"><span class="ci">ℹ</span><span><strong>Windows 11 — confirmed working, persistence workaround required.</strong> Modern NVIDIA GPUs use MSI mode (not MSI-X), which means Windows 11 resets interrupt affinity on every reboot. The fix itself works — regression is measurable and consistent when the setting slips. The pre-launch script re-applies it before every session as a workaround. Windows 10 users typically don't need this workaround.</span></div>
+  <div class="callout good"><span class="ci">✓</span><span><strong>Windows 11 — fully resolved.</strong> Earlier versions of this guide noted a "persistence workaround." The actual root cause has since been identified: Windows 11 uses MSI (Message Signaled Interrupts) mode for modern NVIDIA GPUs, which causes it to ignore affinity policy entirely. Disabling MSI mode (<code>MSISupported=0</code>) per device instance fixes this. The pre-launch script applies both MSI disable and affinity on every session — driver updates reset MSI mode, so re-applying is necessary but reliable.</span></div>
 
-  <div class="callout unique"><span class="ci">🔧</span><span><strong>Device-specific values ahead.</strong> The GPU Device ID and device instance identifiers in this section are unique to each computer. You must find your own values using the commands provided — do not copy the example values.</span></div>
+  <div class="callout unique"><span class="ci">🔧</span><span><strong>Device-specific values ahead.</strong> The GPU device instance identifiers in this section are unique to each computer. You must find your own values — do not copy the example values from this guide or the example bat file.</span></div>
 
-  <h3>Step 1 — Find Your GPU Device ID</h3>
-  <p>Run in Command Prompt:</p>
+  <h3>Step 1 — Find Your GPU Device Instances</h3>
+  <p>Run in <strong>Administrator Command Prompt</strong>:</p>
   <div class="code-wrap">
-    <div class="code-label"><span>Find NVIDIA device ID — copy your own output</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
+    <div class="code-label"><span>Step 1a — get your GPU's VEN/DEV path and instance IDs</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
     <div class="code-block">wmic path Win32_PnPEntity where "Name like '%NVIDIA%'" get DeviceID,Name</div>
   </div>
-  <p>Look for your GPU model (e.g. RTX 4090, RTX 3080). The DeviceID looks like:</p>
+  <p>Look for your GPU model. The DeviceID output has two parts — split at the last backslash:</p>
   <div class="code-wrap no-label">
-    <div class="code-block"><span class="cc">Example output — your values will be different:</span>
-PCI\VEN_10DE&DEV_XXXX&SUBSYS_XXXXXXXX&REV_XX\4&XXXXXXXX&0&XXXX</div>
+    <div class="code-block"><span class="cc">Example — your values will be different. Format:</span>
+PCI\<span class="ch">VEN_10DE&DEV_XXXX&SUBSYS_XXXXXXXX&REV_XX</span>\<span class="ch">4&XXXXXXXX&0&XXXX</span>
+      ↑ VEN/DEV path (same for all instances)    ↑ instance suffix (different each line)</div>
   </div>
+  <p>To list <em>all</em> instances at once, use the VEN/DEV path you found above:</p>
+  <div class="code-wrap">
+    <div class="code-label"><span>Step 1b — list all instances under your VEN/DEV path</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
+    <div class="code-block">reg query "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_VEN_DEV_PATH"</div>
+  </div>
+  <p>Each line returned is a device instance. You may see 2–5 instances. <strong>Note:</strong> after a driver update, a new instance may appear (e.g. just <code>"4"</code> with no suffix). Apply the fix to every instance you find.</p>
 
-  <div class="callout unique"><span class="ci">🔧</span><span><strong>Important:</strong> There may be multiple device instances (2–4) for the same GPU. Windows alternates between them on each reboot. You must apply the affinity setting to <strong>all instances</strong> — use GoInterruptPolicy (Step 3) to identify each one, or apply the registry fix to all instances you find.</span></div>
-
-  <h3>Step 2 — Apply via Registry (all instances)</h3>
-  <p>For each device instance, run these three commands in admin cmd. Replace <span class="unique-val">YOUR_DEVICE_ID</span> with each full ID from Step 1 including the instance suffix (e.g. <code>4&amp;1babdf5b&amp;0&amp;0009</code>):</p>
+  <h3>Step 2 — Disable MSI Mode + Apply Affinity (all instances)</h3>
+  <p>For each instance, run all four commands. Replace <span class="unique-val">YOUR_VEN_DEV_PATH</span> and <span class="unique-val">YOUR_INSTANCE</span> with your values:</p>
 
   <div class="code-wrap">
-    <div class="code-label"><span>Registry fix — replace YOUR_DEVICE_ID with your value</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
-    <div class="code-block"><span class="cc">:: Run for EACH device instance found in Step 1</span>
-reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f
+    <div class="code-label"><span>Registry fix — run for EACH instance</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
+    <div class="code-block"><span class="cc">:: Step 2a — disable MSI mode (required on Win11 — without this, affinity is ignored)</span>
+reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_VEN_DEV_PATH\YOUR_INSTANCE\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v MSISupported /t REG_DWORD /d 0 /f
 
-reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f
+<span class="cc">:: Step 2b — set interrupt affinity to CPU 7</span>
+reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_VEN_DEV_PATH\YOUR_INSTANCE\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f
 
-reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f</div>
+reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_VEN_DEV_PATH\YOUR_INSTANCE\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f
+
+reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_VEN_DEV_PATH\YOUR_INSTANCE\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f</div>
   </div>
 
   <p>Key values explained:</p>
   <ul style="margin:.5rem 0 .75rem 1.5rem;font-size:14px;color:var(--text);">
+    <li><strong>MSISupported = 0</strong> — disables Message Signaled Interrupts mode. Without this on Windows 11, the affinity policy is silently ignored and GPU interrupts stay on CPU 0.</li>
     <li><strong>DevicePolicy = 4</strong> — IrqPolicySpecifiedProcessors (use the core we specify)</li>
-    <li><strong>AssignmentSetOverride = 8000000000000000 (REG_BINARY, little-endian)</strong> — byte 0 = 0x80 = bit 7 set = logical CPU 7. On most 8-core Ryzen CPUs, CPU 7 is the last logical thread of core 3 — a good choice to avoid competing with iRacing's sim thread on CPU 0.</li>
+    <li><strong>AssignmentSetOverride = 8000000000000000 (REG_BINARY, little-endian)</strong> — byte 0 = 0x80 = bit 7 = logical CPU 7. Avoids CPU 0 where iRacing's sim thread runs.</li>
     <li><strong>DevicePriority = 3</strong> — High interrupt priority</li>
   </ul>
 
-  <p>Reboot after applying. Verify with LatencyMon — CPU 7 should now show elevated DPC activity, and CPU 0 should drop.</p>
+  <div class="callout warn"><span class="ci">⚠</span><span><strong>Driver updates reset MSI mode.</strong> Every NVIDIA driver install rewrites the device instance registry entries, including MSISupported — resetting it to 1 (enabled). This causes affinity to stop working silently. The pre-launch script re-applies both MSI disable and affinity before every session, so you won't notice this in practice. But if you ever see stutters return after a driver update, this is why.</span></div>
 
-  <h3>Step 3 — GoInterruptPolicy (alternative / supplement)</h3>
-  <p>Download from <strong>github.com/spddl/GoInterruptPolicy</strong>. Run as Administrator. Search "nvidia" to filter the list.</p>
+  <p>Reboot after applying. Verify with LatencyMon — CPU 7 should now show elevated DPC activity, and CPU 0 should drop significantly.</p>
+
+  <h3>Step 3 — GoInterruptPolicy (visual alternative)</h3>
+  <p>Download from <strong>github.com/spddl/GoInterruptPolicy</strong>. Run as Administrator. Search "nvidia" to filter.</p>
   <div class="steps">
-    <div class="step"><div class="step-body"><strong>Find all NVIDIA GeForce RTX entries.</strong> Check the DevObj Name column to identify which is on PCI bus 2 (the active instance on this boot). There will be multiple.</div></div>
-    <div class="step"><div class="step-body"><strong>For each NVIDIA GPU entry, set:</strong> Device Priority → High, Device Policy → IrqPolicySpecifiedProcessors, then check Thread 4 only (uncheck everything else).</div></div>
-    <div class="step"><div class="step-body"><strong>Apply the registry fix (Step 2) in addition to GoInterruptPolicy</strong> — the registry fix covers whichever instance Windows picks up on the next reboot. GoInterruptPolicy covers the currently active one.</div></div>
+    <div class="step"><div class="step-body"><strong>Find all NVIDIA GeForce RTX entries.</strong> There will be multiple instances — apply settings to all of them.</div></div>
+    <div class="step"><div class="step-body"><strong>For each entry: uncheck MSI</strong> (this is the MSISupported=0 step). Then set Device Priority → High, Device Policy → IrqPolicySpecifiedProcessors, check CPU 7 only.</div></div>
+    <div class="step"><div class="step-body"><strong>Also apply the registry fix (Step 2)</strong> — GoInterruptPolicy only sets the currently active instance. The registry fix covers all instances and persists to the next reboot before the bat re-applies.</div></div>
   </div>
 
   <h3>Automate with Pre-Launch Script</h3>
-  <p>Since the active device instance changes each reboot, the most reliable approach is to re-apply the registry fix before every session via the pre-launch script (Section 08). This ensures all instances are set regardless of which one Windows activates.</p>
+  <p>The pre-launch script (Section 08) applies MSI disable and affinity to all instances before every session. This handles reboot rotation and driver update resets automatically — you don't need to think about it.</p>
 
   <h3>Verify It's Working</h3>
   <p>Run LatencyMon during iRacing. In Per CPU Data:</p>
   <ul style="margin:.5rem 0 .75rem 1.5rem;font-size:14px;color:var(--text);">
-    <li><strong>Working:</strong> CPU 7 shows elevated DPC total, CPU 0 drops significantly</li>
-    <li><strong>Not working:</strong> CPU 0 still dominant (40s+), CPU 7 near zero</li>
+    <li><strong>Working:</strong> CPU 7 shows elevated DPC total, CPU 0 drops significantly from its previous dominant value</li>
+    <li><strong>Not working:</strong> CPU 0 still dominant (40s+ DPC), CPU 7 near zero — MSI mode is likely still enabled</li>
   </ul>
 
   <h3>To Revert</h3>
   <div class="code-wrap">
-    <div class="code-label"><span>Revert — replace YOUR_DEVICE_ID</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
-    <div class="code-block">reg delete "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /f</div>
+    <div class="code-label"><span>Revert MSI mode to default</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
+    <div class="code-block">reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_VEN_DEV_PATH\YOUR_INSTANCE\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v MSISupported /t REG_DWORD /d 1 /f
+reg delete "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_VEN_DEV_PATH\YOUR_INSTANCE\Device Parameters\Interrupt Management\Affinity Policy" /f</div>
   </div>
 </div>
 

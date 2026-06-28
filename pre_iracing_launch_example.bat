@@ -1,19 +1,21 @@
 @echo off
 setlocal EnableDelayedExpansion
-title iRacing Pre-Launch Optimizer v1.0-template
+title iRacing Pre-Launch Optimizer v3.2 (example)
 color 0A
 
 :: ================================================================
-:: iRacing Pre-Launch Optimizer — TEMPLATE v1.0
-:: Tested on: AMD Ryzen 7800X3D / RTX 4090 / Windows 11
+:: iRacing Pre-Launch Optimizer — Real System Example v3.2
+:: AMD Ryzen 7800X3D / RTX 4090 / Triple 2560x1440 240Hz / Win11
 :: ================================================================
-:: USE AT YOUR OWN RISK. Run as Administrator before every session.
-:: Read the full guide before customizing:
-:: https://rcsracing93.github.io/iracing-stutter-fix/guide.html
+:: USE AT YOUR OWN RISK. Run as Administrator.
 ::
-:: HOW TO USE THIS TEMPLATE:
-:: Search for "=== CUSTOMIZE" to find the three values you must
-:: replace with your own. Everything else runs as-is.
+:: This is a real working script from the guide author's system.
+:: It will NOT work on your system without changes.
+:: Use pre_iracing_launch.bat (the template) instead — it explains
+:: exactly what to replace and how to find each value.
+::
+:: Provided as a reference so you can see what a complete,
+:: working script looks like with real values filled in.
 :: ================================================================
 
 net session >nul 2>&1
@@ -52,7 +54,7 @@ echo [OK]   Game Mode disabled
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\USB" /v DisableSelectiveSuspend /t REG_DWORD /d 1 /f >nul 2>&1
 echo [OK]   USB Selective Suspend disabled
 
-:: DISABLE Windows Update (prevents mid-session restart)
+:: DISABLE Windows Update
 sc config wuauserv start= disabled >nul 2>&1
 sc stop wuauserv >nul 2>&1
 timeout /t 2 /nobreak >nul
@@ -71,23 +73,17 @@ timeout /t 1 /nobreak >nul
 sc query WSearch | find "STOPPED" >nul 2>&1
 if %errorlevel%==0 (echo [OK]   Windows Search disabled and stopped) else (echo [WARN] Windows Search may still be running)
 
-:: Print Spooler
+:: Stop remaining services
 sc query Spooler | find "RUNNING" >nul 2>&1
 if %errorlevel%==0 (sc stop Spooler >nul 2>&1 & echo [OK]   Print Spooler stopped) else (echo [OK]   Print Spooler already stopped)
-
-:: WiFi
 sc query WlanSvc | find "RUNNING" >nul 2>&1
 if %errorlevel%==0 (sc stop WlanSvc >nul 2>&1 & echo [OK]   WiFi service stopped) else (echo [OK]   WiFi already stopped)
-
-:: Bluetooth
 sc query BthAvctpSvc | find "RUNNING" >nul 2>&1
 if %errorlevel%==0 (sc stop BthAvctpSvc >nul 2>&1)
 sc query BTAGService | find "RUNNING" >nul 2>&1
 if %errorlevel%==0 (sc stop BTAGService >nul 2>&1)
 sc query bthserv | find "RUNNING" >nul 2>&1
 if %errorlevel%==0 (sc stop bthserv >nul 2>&1 & echo [OK]   Bluetooth stopped) else (echo [OK]   Bluetooth already stopped)
-
-:: Xbox Live
 sc query XblAuthManager | find "RUNNING" >nul 2>&1
 if %errorlevel%==0 (sc stop XblAuthManager >nul 2>&1 & echo [OK]   Xbox Live Auth stopped) else (echo [OK]   Xbox Live Auth already stopped)
 
@@ -98,13 +94,13 @@ if %errorlevel%==0 (
     if !errorlevel!==0 (sc stop bzserv >nul 2>&1 & echo [OK]   Backblaze stopped) else (echo [OK]   Backblaze already stopped)
 ) else (echo [OK]   Backblaze not installed)
 
-:: OneDrive — stop to prevent sync conflicts with iRacing Documents folder
+:: OneDrive
 taskkill /IM OneDrive.exe /F >nul 2>&1
 timeout /t 2 /nobreak >nul
 tasklist | find /i "OneDrive.exe" >nul 2>&1
 if %errorlevel%==0 (echo [WARN] OneDrive still running) else (echo [OK]   OneDrive stopped)
 
-:: Close Chrome and Claude before racing
+:: Close Chrome and Claude
 taskkill /IM chrome.exe /F >nul 2>&1
 tasklist | find /i "chrome.exe" >nul 2>&1
 if %errorlevel%==0 (echo [WARN] Chrome still running) else (echo [OK]   Chrome closed)
@@ -112,22 +108,15 @@ taskkill /IM "Claude.exe" /F >nul 2>&1
 taskkill /IM "claude-desktop.exe" /F >nul 2>&1
 echo [OK]   Claude closed
 
-:: ================================================================
-:: === CUSTOMIZE 1 of 3: AMD Ryzen Balanced Power Plan GUID ===
-::
-:: To find your GUID, run in admin PowerShell:
-::   powercfg /list
-:: Look for "AMD Ryzen Balanced" in the list.
-:: If it doesn't exist, create it:
-::   powercfg /duplicatescheme e4041c28-a933-4db9-9e7a-7a9a87c65676
-:: Then run powercfg /list again to get the new GUID.
-::
-:: Replace YOUR-AMD-RYZEN-BALANCED-GUID below with your value:
-:: ================================================================
-powercfg /setactive YOUR-AMD-RYZEN-BALANCED-GUID >nul 2>&1
-if %errorlevel%==0 (echo [OK]   Power plan set to AMD Ryzen Balanced) else (echo [WARN] Could not set AMD Ryzen Balanced - check GUID in Section 06 of guide)
+:: ----------------------------------------------------------------
+:: AMD Ryzen Balanced power plan
+:: GUID is system-specific — yours will be different.
+:: Find yours with: powercfg /list
+:: ----------------------------------------------------------------
+powercfg /setactive c584c850-222a-4f65-ae2c-fe6e5b7a0c40 >nul 2>&1
+if %errorlevel%==0 (echo [OK]   Power plan set to AMD Ryzen Balanced) else (echo [WARN] Could not set AMD Ryzen Balanced - check GUID)
 
-:: Process Lasso check
+:: Process Lasso
 tasklist | find /i "ProcessLasso.exe" >nul 2>&1
 if %errorlevel%==0 (
     echo [OK]   Process Lasso running
@@ -137,16 +126,16 @@ if %errorlevel%==0 (
     timeout /t 3 /nobreak >nul
 )
 
-:: Monitor refresh rate check - must be at max Hz
+:: Monitor refresh rate check
 for /f "tokens=*" %%a in ('powershell -command "(Get-WmiObject Win32_VideoController | Where-Object {$_.Name -like '*NVIDIA*'}).CurrentRefreshRate" 2^>nul') do set MONHZ=%%a
 if defined MONHZ (
     if !MONHZ! GEQ 230 (
         echo [OK]   Monitor refresh rate: !MONHZ! Hz
     ) else (
         color 0C
-        echo [FAIL] Monitor refresh rate: !MONHZ! Hz
+        echo [FAIL] Monitor refresh rate: !MONHZ! Hz - must be at max Hz before racing
         echo        Fix: Settings ^> System ^> Display ^> Advanced display ^> refresh rate
-        echo        Set ALL monitors to max Hz, then re-run this script
+        echo        Do this for ALL monitors, then re-run this script
         pause
         color 0A
     )
@@ -154,65 +143,59 @@ if defined MONHZ (
     echo [WARN] Could not check monitor refresh rate
 )
 
-:: ================================================================
-:: === CUSTOMIZE 2 of 3: NVIDIA Device Instance IDs ===
-::
-:: Each system has 2-5 device instances for the same GPU.
-:: Windows alternates between them on each reboot, so ALL must
-:: be set. Run this in Command Prompt to find yours:
-::
-::   wmic path Win32_PnPEntity where "Name like '%NVIDIA%'" get DeviceID,Name
-::
-:: Look for your GPU model. The instance suffix is the part after
-:: the last backslash: e.g. 4&1babdf5b&0&0009
-::
-:: You also need your GPU's VEN/DEV path. Run:
-::   reg query "HKLM\System\CurrentControlSet\Enum\PCI" /s /k | findstr /i "VEN_10DE"
-:: Find the path containing your GPU's device ID.
-::
-:: Replace the NV path and instance IDs below:
-:: ================================================================
-set "NV=HKLM\System\CurrentControlSet\Enum\PCI\YOUR-GPU-VEN-DEV-PATH"
+:: Trophi.ai CPU affinity (CPUs 12-15 = 0xF000) — remove if not using Trophi.ai
+powershell -command "$procs = @('trophi.ai','trophi.ai.messagebroker','trophi.ai.profiler','UnityCrashHandler64'); foreach ($n in $procs) { $p = Get-Process $n -ErrorAction SilentlyContinue; if ($p) { $p | ForEach-Object { $_.ProcessorAffinity = [IntPtr]0xF000 } } }" >nul 2>&1
+echo [OK]   Trophi.ai processes pinned to CPUs 12-15
 
-call :nvidia_affinity YOUR_INSTANCE_1
-call :nvidia_affinity YOUR_INSTANCE_2
-call :nvidia_affinity YOUR_INSTANCE_3
-call :nvidia_affinity YOUR_INSTANCE_4
-:: Add more lines above if wmic shows additional instances (some systems have 5+)
+:: ----------------------------------------------------------------
+:: NVIDIA interrupt affinity — all 5 device instances to CPU 7
+:: Step 1: MSI mode disabled per instance (required on Win11 — without this, affinity is ignored)
+:: Step 2: AssignmentSetOverride = 8000000000000000 (REG_BINARY, little-endian = CPU 7)
+::
+:: These instance IDs are specific to this RTX 4090 system.
+:: Find yours: see guide.html Section 05 for the full discovery commands.
+:: Note: instance "4" (bare number) appeared after the 610.62 driver install.
+:: ----------------------------------------------------------------
+set "_NVINST=4"
+call :nvidia_affinity
+set "_NVINST=4&15a5c264&0&000B"
+call :nvidia_affinity
+set "_NVINST=4&15a5c2648&0&000B"
+call :nvidia_affinity
+set "_NVINST=4&1BABDF5B&0&0009"
+call :nvidia_affinity
+set "_NVINST=4&285f7309&0&000C"
+call :nvidia_affinity
+echo [OK]   NVIDIA MSI disabled + affinity CPU7 on all 5 instances
 
-echo [OK]   NVIDIA interrupt affinity set to CPU 7 on all instances
-
-:: Defender exclusions - only needed if real-time monitoring is still active
+:: Defender exclusions — fallback if suspension failed
 if %_DEFENDER_OFF%==0 goto :skip_exclusions
 echo [WARN] Applying Defender exclusions as fallback...
 set "_DP=C:\Program Files (x86)\iRacing" & set "_DL=iRacing install" & call :defender_path
-set "_DP=%USERPROFILE%\Documents\iRacing" & set "_DL=iRacing documents" & call :defender_path
+set "_DP=%USERPROFILE%\OneDrive\Equipment\iRacing" & set "_DL=iRacing documents" & call :defender_path
 set "_DP=C:\Program Files\Process Lasso" & set "_DL=Process Lasso" & call :defender_path
 set "_DP=C:\Program Files\CapFrameX" & set "_DL=CapFrameX" & call :defender_path
+set "_DP=%LOCALAPPDATA%\trophi.ai" & set "_DL=Trophi.ai" & call :defender_path
+set "_DP=C:\Program Files (x86)\RhinoDe LLC\Trading Paints" & set "_DL=Trading Paints" & call :defender_path
 set "_DC=iRacingSim64DX11.exe" & call :defender_proc
 set "_DC=iracinglocalserver64.exe" & call :defender_proc
 set "_DC=iRacingService.exe" & call :defender_proc
 set "_DC=CapFrameX.exe" & call :defender_proc
+set "_DC=LatencyMon.exe" & call :defender_proc
+set "_DC=trading paints.exe" & call :defender_proc
 set "_DC=ProcessLasso.exe" & call :defender_proc
+set "_DC=SimProManager.exe" & call :defender_proc
 goto :after_exclusions
 :skip_exclusions
 echo [OK]   Defender exclusion checks skipped - monitoring suspended
 :after_exclusions
 
-:: ================================================================
-:: === CUSTOMIZE 3 of 3: NVIDIA driver version string ===
-::
-:: This checks that your driver hasn't changed since you last
-:: verified your GoInterruptPolicy settings. Get your version:
-::
+:: NVIDIA driver version check
+:: 32.0.16.1062 = driver 610.62 in WMI format. Update this after each driver install:
 ::   wmic path Win32_VideoController where "Name like '%NVIDIA%'" get DriverVersion
-::
-:: Replace YOUR-DRIVER-VERSION below. Update this value after
-:: every driver install.
-:: ================================================================
 for /f "tokens=*" %%a in ('powershell -command "(Get-WmiObject Win32_VideoController | Where-Object {$_.Name -like '*NVIDIA*'}).DriverVersion" 2^>nul') do set NVDRIVER=%%a
 if defined NVDRIVER (
-    if "!NVDRIVER!"=="YOUR-DRIVER-VERSION" (echo [OK]   NVIDIA driver confirmed: !NVDRIVER!) else (echo [WARN] NVIDIA driver changed: !NVDRIVER! - re-verify GoInterruptPolicy settings after driver updates)
+    if "!NVDRIVER!"=="32.0.16.1062" (echo [OK]   NVIDIA driver confirmed: !NVDRIVER!) else (echo [WARN] NVIDIA driver changed: !NVDRIVER! - re-verify GoInterruptPolicy after driver updates)
 ) else (echo [WARN] Could not read NVIDIA driver version)
 
 :: Final wuauserv check
@@ -228,31 +211,25 @@ echo.
 pause
 goto :eof
 
-:: ---------------------------------------------------------------
-:: Subroutine: set NVIDIA interrupt affinity on one device instance to CPU 7
-:: Usage: call :nvidia_affinity INSTANCE_ID
 :nvidia_affinity
-set "_BASE=%NV%\%~1\Device Parameters\Interrupt Management"
+set "_BASE=HKLM\System\CurrentControlSet\Enum\PCI\VEN_10DE&DEV_2684&SUBSYS_88EF1043&REV_A1\!_NVINST!\Device Parameters\Interrupt Management"
 :: Disable MSI mode — required on Win11 or affinity is silently ignored
 reg add "!_BASE!\MessageSignaledInterruptProperties" /v MSISupported /t REG_DWORD /d 0 /f >nul 2>&1
 :: Set interrupt affinity to CPU 7
 reg add "!_BASE!\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
 reg add "!_BASE!\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f >nul 2>&1
 reg add "!_BASE!\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
-if !errorlevel!==0 (echo [OK]   NVIDIA MSI disabled + affinity CPU7: %~1) else (echo [WARN] Could not set: %~1)
+if !errorlevel!==0 (echo [OK]   NVIDIA MSI disabled + affinity CPU7: !_NVINST!) else (echo [WARN] Could not set: !_NVINST!)
 exit /b
 
-:: ---------------------------------------------------------------
-:: Subroutine: check and auto-add Defender path exclusion
 :defender_path
 powershell -command "$p=(Get-MpPreference).ExclusionPath; if ($p -contains '!_DP!') { exit 0 } else { exit 1 }" >nul 2>&1
 if !errorlevel!==1 (
     powershell -command "Add-MpPreference -ExclusionPath '!_DP!'" >nul 2>&1
-    if !errorlevel!==0 (echo [FIXED] Defender exclusion added: !_DL!) else (echo [FAIL]  Could not add exclusion: !_DP!)
+    if !errorlevel!==0 (echo [FIXED] Defender exclusion added: !_DL!) else (echo [FAIL]  Could not add: !_DP!)
 ) else (echo [OK]    Defender exclusion: !_DL!)
 exit /b
 
-:: Subroutine: check and auto-add Defender process exclusion
 :defender_proc
 powershell -command "$p=(Get-MpPreference).ExclusionProcess; if ($p -contains '!_DC!') { exit 0 } else { exit 1 }" >nul 2>&1
 if !errorlevel!==1 (

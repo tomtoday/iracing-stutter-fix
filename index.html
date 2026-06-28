@@ -369,12 +369,23 @@ footer a:hover{color:var(--green);}
         <div class="dl-card-top">
           <div class="dl-icon">⚙️</div>
           <div class="dl-card-info">
-            <div class="dl-card-name">pre_iracing_launch.bat</div>
-            <div class="dl-card-desc">Run before every session. Disables background services, Defender real-time monitoring, HAGS, Game Mode, and USB Suspend. Applies NVIDIA interrupt affinity to all device instances, sets AMD Ryzen Balanced power plan, verifies monitors are at max refresh rate.</div>
+            <div class="dl-card-name">pre_iracing_launch.bat <span style="font-size:11px;color:var(--green);font-weight:normal;">[TEMPLATE]</span></div>
+            <div class="dl-card-desc">Run before every session. Disables background services, Defender real-time monitoring, HAGS, Game Mode, and USB Suspend. Disables MSI mode + applies NVIDIA interrupt affinity to all device instances. Sets AMD Ryzen Balanced power plan. Verifies monitors at max refresh rate.</div>
           </div>
         </div>
-        <div class="dl-warning">⚠ Customize 3 values before use: AMD Ryzen Balanced GUID, NVIDIA device instance IDs, NVIDIA driver version string — see guide</div>
-        <a href="pre_iracing_launch.bat" class="btn btn-download" download><span class="btn-icon">⬇</span>Download .bat</a>
+        <div class="dl-warning">⚠ Customize 3 values before use: AMD Ryzen Balanced GUID, NVIDIA device instance IDs, NVIDIA driver version string — see guide Section 05</div>
+        <a href="pre_iracing_launch.bat" class="btn btn-download" download><span class="btn-icon">⬇</span>Download template</a>
+      </div>
+      <div class="dl-card">
+        <div class="dl-card-top">
+          <div class="dl-icon">📋</div>
+          <div class="dl-card-info">
+            <div class="dl-card-name">pre_iracing_launch_example.bat <span style="font-size:11px;color:var(--amber);font-weight:normal;">[EXAMPLE]</span></div>
+            <div class="dl-card-desc">Real example with actual values filled in — shows what the template looks like fully configured for a Ryzen 7800X3D + RTX 4090 system. Do not run this directly — use it as a reference when filling in your own values.</div>
+          </div>
+        </div>
+        <div class="dl-warning">⚠ Do not run as-is — these values are for a specific machine. Use as a reference alongside the template</div>
+        <a href="pre_iracing_launch_example.bat" class="btn btn-download" download><span class="btn-icon">⬇</span>Download example</a>
       </div>
       <div class="dl-card">
         <div class="dl-card-top">
@@ -390,9 +401,9 @@ footer a:hover{color:var(--green);}
     </div>
   </div>
 
-  <div class="callout warn">
-    <span class="ci">⚠</span>
-    <span>The batch scripts contain system-specific values (AMD power plan GUID, NVIDIA device instance IDs, driver version string) that are unique to the author's system. Before running them, read the guide to understand which three values need to be replaced. The guide explains how to find each one on your own machine.</span>
+  <div class="callout info">
+    <span class="ci">ℹ</span>
+    <span>Start with the <strong>template</strong> — it has placeholders and instructions for finding your three system-specific values (AMD GUID, NVIDIA instance IDs, driver version string). Use the <strong>example</strong> to see what filled-in values look like. Guide Section 05 walks through finding each value.</span>
   </div>
 
 </div>
