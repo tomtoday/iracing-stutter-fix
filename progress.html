@@ -68,7 +68,7 @@ small{font-size:11px;color:var(--text-dim);}
   <div class="sb"><div class="n">Worst Frame Time</div><div class="b">32.10ms</div><div class="arr">↓ 67%</div><div class="a">10.71ms</div></div>
   <div class="sb"><div class="n">Spikes &gt;12ms / 5min</div><div class="b">2–3 spikes</div><div class="arr">↓ 100%</div><div class="a">0 spikes</div></div>
   <div class="sb"><div class="n">Hard Pagefaults</div><div class="b">70,000+</div><div class="arr">↓ 97%</div><div class="a">~2,000</div></div>
-  <div class="sb"><div class="n">NVIDIA Interrupt Fix</div><div class="b">CPU 0 dominant</div><div class="arr">in progress</div><div class="a">MSI limitation</div></div>
+  <div class="sb"><div class="n">NVIDIA Interrupt Fix</div><div class="b">CPU 0 dominant</div><div class="arr">workaround confirmed</div><div class="a">CPU 7 via bat</div></div>
 </div>
 
 <h2>Change Timeline</h2>
@@ -153,21 +153,20 @@ small{font-size:11px;color:var(--text-dim);}
 </div>
 <p><small>* dxgkrnl.sys replacing nvlddmkm.sys after RTSS removal — iOverlay DirectX hooks suspected. † Services may not have been fully disabled this session.</small></p>
 
-<h2>Pending Items</h2>
-<table class="pt">
-  <tr><th>Item</th><th>Status</th><th>Priority</th></tr>
-  <tr><td>AutoGpuAffinity — benchmark-based core selection for GPU interrupt</td><td><span class="badge ba">Next test</span></td><td>High</td></tr>
-  <tr><td>iOverlay DirectX hook isolation — test without iOverlay to confirm dxgkrnl.sys cause</td><td><span class="badge ba">Pending</span></td><td>High</td></tr>
-  <tr><td>Real race test with AI cars present</td><td><span class="badge ba">Pending</span></td><td>High</td></tr>
-  <tr><td>rendererDX11Monitor.ini — StaticShadowNumber 3→2, side monitor CrowdDetail 2→0</td><td><span class="badge ba">Pending edit</span></td><td>Medium</td></tr>
-  <tr><td>app.ini — numSoundStreams -1→12</td><td><span class="badge ba">Pending edit</span></td><td>Low</td></tr>
-  <tr><td>NVIDIA MSI interrupt affinity — persistent solution</td><td><span class="badge br">Unresolved</span></td><td>High</td></tr>
-  <tr><td>Cowork project setup for automated log analysis</td><td><span class="badge bg">Planned</span></td><td>Low</td></tr>
-</table>
+<h2>Phase 2 Update — June 2026</h2>
+<p style="font-size:13px;color:var(--text-dim);margin-bottom:1rem;">Phase 1 closed May 14 with 0 spikes. Phase 2 is ongoing — driver hygiene, bat improvements, and graphics headroom testing.</p>
+<div class="tw">
+  <div class="tl re"><div class="td">Jun 2026</div><div class="tb"><strong>NVIDIA interrupt affinity confirmed working.</strong> Regression is measurable when it reverts — that consistency proves the fix works. Win11 MSI limitation means it doesn't persist across reboots. Pre-launch bat re-applies to all 4 device instances (CPU 7, bitmask 0x80) before every session. Workaround is reliable.</div></div>
+  <div class="tl re"><div class="td">Jun 2026</div><div class="tb"><strong>iOverlay removed.</strong> dxgkrnl.sys became top DPC driver after RTSS removal — iOverlay DirectX hook suspected. Removed. Not in use.</div></div>
+  <div class="tl re"><div class="td">Jun 2026</div><div class="tb"><strong>Pre-launch bat updated to v3.2.</strong> Now also disables HAGS, Game Mode, Xbox Game Bar, USB Selective Suspend, and fully suspends Defender real-time monitoring for the session. Defender exclusions auto-repaired as fallback. Post-session bat restores everything.</div></div>
+  <div class="tl re"><div class="td">Jun 2026</div><div class="tb"><strong>AMD Chipset 8.05.04.516 installed.</strong> Maintenance update with L3 cache fix relevant to 7800X3D.</div></div>
+  <div class="tl fi"><div class="td">Pending</div><div class="tb"><strong>NVIDIA 610.62 WHQL queued.</strong> Fixes confirmed G-Sync frame pacing bug (bug ID 6226972) on Ada Lovelace with G-Sync monitors. Current 610.47 has this bug. Vetted clean after 12 days community exposure — install pending.</div></div>
+  <div class="tl fi"><div class="td">Pending</div><div class="tb"><strong>TEST 1 — clean baseline after 610.62.</strong> First full session with all fixes active and correct driver. Will confirm whether May 15 baseline (0 spikes, avg 6.08ms) holds. If clean: TEST 5 (GPU load in stress scenarios) then TEST 6 (MSAA 4x).</div></div>
+</div>
 
 <footer>
   <span>iRacing Stutter Progress Report — SIMRACER</span>
-  <span>Last updated May 14, 2026 — 24 sessions</span>
+  <span>Last updated June 2026 — 24 sessions (Phase 1) + ongoing</span>
 </footer>
 </body>
 </html>
