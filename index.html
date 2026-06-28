@@ -38,14 +38,52 @@ h1 em{color:var(--green);font-style:normal;}
 
 .container{max-width:800px;margin:0 auto;padding:3rem 2rem 5rem;}
 
+/* RESULTS */
+.results-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:3rem;}
+@media(max-width:560px){.results-strip{grid-template-columns:1fr;}}
+.rs-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1rem 1.25rem;text-align:center;}
+.rs-label{font-size:11px;color:var(--text-dim);margin-bottom:4px;font-family:var(--mono);}
+.rs-before{font-size:17px;font-weight:700;color:var(--red);}
+.rs-arrow{font-size:11px;color:var(--text-dim);margin:2px 0;}
+.rs-after{font-size:17px;font-weight:700;color:var(--green);}
+
+/* JOURNEY */
+.journey{margin-bottom:3rem;padding:1.5rem 1.75rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;}
+.section-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.75rem;}
+.journey p{font-size:15px;color:var(--text);line-height:1.75;margin-bottom:.75rem;}
+.journey p:last-child{margin-bottom:0;}
+.journey strong{color:var(--text-hi);}
+
+/* PRIORITY FIXES */
+.priority-section{margin-bottom:3rem;}
+.priority-section > .section-label{margin-bottom:1.25rem;}
+
+.tier{margin-bottom:1.75rem;}
+.tier-header{display:flex;align-items:center;gap:10px;margin-bottom:.875rem;}
+.tier-badge{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:2px;}
+.tier-badge.first{background:rgba(0,229,160,.15);color:var(--green);border:1px solid rgba(0,229,160,.3);}
+.tier-badge.always{background:rgba(61,158,255,.12);color:var(--blue);border:1px solid rgba(61,158,255,.25);}
+.tier-badge.advanced{background:rgba(255,179,71,.1);color:var(--amber);border:1px solid rgba(255,179,71,.2);}
+.tier-desc{font-size:13px;color:var(--text-dim);}
+
+.fix-list{display:flex;flex-direction:column;gap:8px;}
+.fix-item{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:.875rem 1.125rem;display:flex;gap:1rem;align-items:flex-start;}
+.fix-item:hover{border-color:var(--border2);}
+.fix-num{font-family:var(--mono);font-size:12px;color:var(--text-dim);flex-shrink:0;min-width:22px;margin-top:2px;}
+.fix-body{}
+.fix-title{font-size:14px;font-weight:600;color:var(--text-hi);margin-bottom:2px;}
+.fix-detail{font-size:13px;color:var(--text-dim);line-height:1.55;}
+.fix-impact{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;margin-top:6px;padding:2px 8px;border-radius:2px;}
+.fi-green{color:var(--green);background:var(--green-dim);border:1px solid rgba(0,229,160,.2);}
+.fi-blue{color:var(--blue);background:var(--blue-dim);border:1px solid rgba(61,158,255,.2);}
+.fi-amber{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(255,179,71,.2);}
+
 /* MAIN CARDS */
 .card-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:3rem;}
-
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s;}
 .card:hover{border-color:var(--border2);}
 .card.featured{border-color:rgba(0,229,160,.25);background:linear-gradient(135deg,#10141c,#0d1218);}
 .card.featured:hover{border-color:rgba(0,229,160,.4);}
-
 .card-inner{padding:1.5rem 1.75rem;}
 .card-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;}
 .card-title{font-family:var(--display);font-size:1.2rem;font-weight:700;color:var(--text-hi);margin-bottom:.5rem;letter-spacing:-.01em;}
@@ -56,7 +94,6 @@ h1 em{color:var(--green);font-style:normal;}
 .mt-green{color:var(--green);background:var(--green-dim);border:1px solid rgba(0,229,160,.2);}
 .mt-blue{color:var(--blue);background:var(--blue-dim);border:1px solid rgba(61,158,255,.2);}
 .mt-amber{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(255,179,71,.2);}
-
 .btn{display:inline-flex;align-items:center;gap:8px;padding:.625rem 1.25rem;border-radius:4px;font-family:var(--mono);font-size:13px;text-decoration:none;transition:all .2s;cursor:pointer;}
 .btn-primary{background:var(--green);color:#0a0c10;font-weight:600;}
 .btn-primary:hover{background:#20ffb8;}
@@ -65,40 +102,20 @@ h1 em{color:var(--green);font-style:normal;}
 .btn-download{background:var(--bg3);color:var(--amber);border:1px solid rgba(255,179,71,.25);}
 .btn-download:hover{background:var(--amber-dim);border-color:var(--amber);}
 .btn-icon{font-size:14px;}
-
 .card-actions{display:flex;flex-wrap:wrap;gap:8px;}
 
-/* DOWNLOAD SECTION */
+/* DOWNLOADS */
 .dl-section{margin-bottom:3rem;}
 .dl-title{font-family:var(--display);font-size:1.1rem;font-weight:700;color:var(--text-hi);margin-bottom:.5rem;}
 .dl-sub{font-size:13px;color:var(--text-dim);margin-bottom:1rem;}
 .dl-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 @media(max-width:560px){.dl-grid{grid-template-columns:1fr;}}
-
 .dl-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem;}
 .dl-card-top{display:flex;align-items:flex-start;gap:.875rem;}
 .dl-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
-.dl-card-info{}
 .dl-card-name{font-family:var(--mono);font-size:13px;color:var(--text-hi);font-weight:600;margin-bottom:2px;}
 .dl-card-desc{font-size:12px;color:var(--text-dim);line-height:1.5;}
 .dl-warning{font-size:11px;color:var(--amber);font-family:var(--mono);background:var(--amber-dim);border:1px solid rgba(255,179,71,.2);border-radius:3px;padding:4px 8px;line-height:1.5;}
-
-/* WHAT THIS COVERS */
-.covers{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1.5rem 1.75rem;margin-bottom:3rem;}
-.covers-title{font-family:var(--display);font-size:1rem;font-weight:700;color:var(--text-hi);margin-bottom:1rem;}
-.covers-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
-@media(max-width:560px){.covers-grid{grid-template-columns:1fr;}}
-.cover-item{display:flex;align-items:flex-start;gap:.625rem;font-size:13px;color:var(--text);padding:.375rem 0;}
-.cover-dot{color:var(--green);flex-shrink:0;margin-top:1px;}
-
-/* RESULTS STRIP */
-.results-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:3rem;}
-@media(max-width:560px){.results-strip{grid-template-columns:1fr;}}
-.rs-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1rem 1.25rem;text-align:center;}
-.rs-label{font-size:11px;color:var(--text-dim);margin-bottom:4px;font-family:var(--mono);}
-.rs-before{font-size:17px;font-weight:700;color:var(--red);}
-.rs-arrow{font-size:11px;color:var(--text-dim);margin:2px 0;}
-.rs-after{font-size:17px;font-weight:700;color:var(--green);}
 
 /* CALLOUT */
 .callout{padding:1rem 1.25rem;border-radius:4px;margin:1rem 0;font-size:14px;display:flex;gap:.875rem;align-items:flex-start;line-height:1.6;}
@@ -128,7 +145,7 @@ footer a:hover{color:var(--green);}
       <span class="pill pill-blue">Windows 11</span>
       <span class="pill pill-blue">iRacing DX11</span>
     </div>
-    <div class="updated"><span class="dot"></span>Last updated May 14, 2026</div>
+    <div class="updated"><span class="dot"></span>Last updated June 2026</div>
 
     <div class="coffee-bar">
       <a href="https://www.buymeacoffee.com/J2tfeMml5O" target="_blank" rel="noopener" class="coffee-link">
@@ -160,6 +177,148 @@ footer a:hover{color:var(--green);}
       <div class="rs-before">70,000+</div>
       <div class="rs-arrow">↓ 97%</div>
       <div class="rs-after">~2,000</div>
+    </div>
+  </div>
+
+  <!-- JOURNEY -->
+  <div class="journey">
+    <div class="section-label">The journey</div>
+    <p>iRacing was throwing <strong>2–3 frame spikes every 5 minutes</strong> — mid-corner, mid-battle, exactly when it hurts most. Worst frametimes were over 32ms on a Ryzen 7800X3D / RTX 4090 rig that should have been rock solid. Something was wrong.</p>
+    <p>Over 24 CapFrameX sessions in May 2026, every variable got isolated one at a time. The causes weren't where we expected: a monitor running at 120Hz instead of 240Hz, RivaTuner hiding inside CapFrameX, GPU interrupt handling defaulting to the wrong CPU core. <strong>None of these showed up without measurement.</strong></p>
+    <p>End state: 0 spikes, worst frametime under 9ms, 97% fewer hard pagefaults. The fixes are documented here in the order they matter — start with the highest-impact items and work down.</p>
+  </div>
+
+  <!-- PRIORITY FIXES -->
+  <div class="priority-section">
+    <div class="section-label">Fixes — highest impact first</div>
+
+    <div class="tier">
+      <div class="tier-header">
+        <span class="tier-badge first">Do These First</span>
+        <span class="tier-desc">Each one directly caused spikes. Start here before anything else.</span>
+      </div>
+      <div class="fix-list">
+
+        <div class="fix-item">
+          <div class="fix-num">1</div>
+          <div class="fix-body">
+            <div class="fix-title">Remove RTSS and MSI Afterburner</div>
+            <div class="fix-detail">RivaTuner Statistics Server was hiding as a CapFrameX overlay dependency and causing 50,000+ hard pagefaults per session — directly responsible for 3 measured spikes. Uninstall both. CapFrameX works fine without them.</div>
+            <span class="fix-impact fi-green">Confirmed — 3 spikes eliminated immediately</span>
+          </div>
+        </div>
+
+        <div class="fix-item">
+          <div class="fix-num">2</div>
+          <div class="fix-body">
+            <div class="fix-title">Verify your monitors are running at max refresh rate</div>
+            <div class="fix-detail">Samsung and many other monitors default to 120Hz after reboot or sleep even when set to 240Hz in Windows. Running below max Hz creates present timing mismatches. Check: Settings → System → Display → Advanced display → refresh rate. Do this for every monitor. This was a significant contributor that wasn't obvious until measured.</div>
+            <span class="fix-impact fi-green">Confirmed — major contributor to spike pattern</span>
+          </div>
+        </div>
+
+        <div class="fix-item">
+          <div class="fix-num">3</div>
+          <div class="fix-body">
+            <div class="fix-title">Lower MSAA and turn off Crowds</div>
+            <div class="fix-detail">MSAA 4x was the biggest single GPU driver of Type A burst spikes (scene complexity → GPU burst → missed present). Drop to 2x. Crowds off has near-zero visual impact at racing speeds and significantly reduces draw call count. These two changes together eliminated the Type A spike pattern entirely.</div>
+            <span class="fix-impact fi-green">Confirmed — eliminated GPU burst spikes entirely</span>
+          </div>
+        </div>
+
+        <div class="fix-item">
+          <div class="fix-num">4</div>
+          <div class="fix-body">
+            <div class="fix-title">Add Windows Defender exclusions for iRacing</div>
+            <div class="fix-detail">Without exclusions, msmpeng.exe was the top hard pagefaulter every session. Adding exclusions for the iRacing install folder and Documents\iRacing dropped pagefaults by ~97%. Use admin PowerShell: <code style="font-family:var(--mono);font-size:12px;color:var(--green);">Add-MpPreference -ExclusionPath "C:\Program Files (x86)\iRacing"</code> — and also for your iRacing documents path.</div>
+            <span class="fix-impact fi-green">Confirmed — 97% pagefault reduction</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-header">
+        <span class="tier-badge always">Do These Always</span>
+        <span class="tier-desc">Foundation settings — low effort, confirmed beneficial, run before every session.</span>
+      </div>
+      <div class="fix-list">
+
+        <div class="fix-item">
+          <div class="fix-num">5</div>
+          <div class="fix-body">
+            <div class="fix-title">Create and activate AMD Ryzen Balanced power plan</div>
+            <div class="fix-detail">Windows High Performance and Bitsum Highest Performance both disable the AMD firmware that prioritizes the 3D V-Cache core on X3D CPUs. The AMD Ryzen Balanced plan keeps V-Cache prioritization active. Surprisingly, it may not exist on your system even after installing AMD drivers — you may need to create it manually via <code style="font-family:var(--mono);font-size:12px;color:var(--green);">powercfg /duplicatescheme</code>. See guide for full steps.</div>
+            <span class="fix-impact fi-blue">Required for correct X3D core prioritization</span>
+          </div>
+        </div>
+
+        <div class="fix-item">
+          <div class="fix-num">6</div>
+          <div class="fix-body">
+            <div class="fix-title">Disable background Windows services before sessions</div>
+            <div class="fix-detail">Windows Update, Update Orchestrator, and Windows Search must be <em>disabled</em> (not just stopped) — they restart themselves. Backblaze, WiFi, Bluetooth, and Xbox Live can be stopped. These services compete for CPU and disk during sessions. The pre-launch script handles this automatically on every run.</div>
+            <span class="fix-impact fi-blue">Confirmed — reduces pagefault floor and CPU contention</span>
+          </div>
+        </div>
+
+        <div class="fix-item">
+          <div class="fix-num">7</div>
+          <div class="fix-body">
+            <div class="fix-title">NVIDIA Control Panel — iRacing program settings</div>
+            <div class="fix-detail">Low Latency Mode = <strong>On</strong> (not Ultra — Ultra caused present queue stall patterns in testing). Power Management = Max Performance. Threaded Optimization = On. Shader Cache = Unlimited. V-Sync = Off. Also: uninstall GeForce Experience — it adds DirectX hooks and background DPC load with no benefit if you're downloading drivers directly.</div>
+            <span class="fix-impact fi-blue">Confirmed — cleaner present queue behavior</span>
+          </div>
+        </div>
+
+        <div class="fix-item">
+          <div class="fix-num">8</div>
+          <div class="fix-body">
+            <div class="fix-title">Enable texture preloading in app.ini</div>
+            <div class="fix-detail">By default, iRacing streams high-res car textures as cars enter view — this causes GPU bursts mid-lap. Preloading eliminates it at the cost of longer session load times (expected behavior). Under <code style="font-family:var(--mono);font-size:12px;color:var(--green);">[Graphics]</code> in app.ini: <code style="font-family:var(--mono);font-size:12px;color:var(--green);">carPreloadAll=1, trackTexturePreload=1, streamingTextureSize=256</code>. Also disable "Video mem swap high-res cars" in iRSidekick Extras.</div>
+            <span class="fix-impact fi-blue">Confirmed — eliminates mid-lap texture streaming bursts</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-header">
+        <span class="tier-badge advanced">Advanced / If Still Broken</span>
+        <span class="tier-desc">Confirmed working but more complex — worth doing if spikes persist after the above.</span>
+      </div>
+      <div class="fix-list">
+
+        <div class="fix-item">
+          <div class="fix-num">9</div>
+          <div class="fix-body">
+            <div class="fix-title">NVIDIA interrupt affinity — steer GPU interrupts to CPU 7</div>
+            <div class="fix-detail">LatencyMon showed CPU 0 handling 473,907 ISRs per 6-minute session with nvlddmkm.sys DPCs up to 1,543µs — while iRacing's sim thread is hardcoded to CPU 0. Steering GPU interrupts to CPU 7 via registry (AssignmentSetOverride) removes that conflict. On Windows 11, the RTX 4090 uses MSI mode (not MSI-X), so the setting doesn't persist across reboots — the pre-launch script re-applies it every session across all device instances. Regression is measurable when it slips, which confirms it works.</div>
+            <span class="fix-impact fi-amber">Confirmed working — persistence workaround required</span>
+          </div>
+        </div>
+
+        <div class="fix-item">
+          <div class="fix-num">10</div>
+          <div class="fix-body">
+            <div class="fix-title">Process Lasso — iRacing priority, isolate Discord</div>
+            <div class="fix-detail">Set iRacingSim64DX11.exe to High CPU priority and High I/O, excluded from ProBalance. Note: you cannot set CPU core affinity for iRacing — EasyAntiCheat silently blocks all external affinity changes. Discord on odd cores only at Below Normal priority. CapFrameX excluded from ProBalance (don't restrict it or captures will be unreliable).</div>
+            <span class="fix-impact fi-amber">Beneficial — prevents ProBalance from throttling iRacing</span>
+          </div>
+        </div>
+
+        <div class="fix-item">
+          <div class="fix-num">11</div>
+          <div class="fix-body">
+            <div class="fix-title">Disable HAGS, Game Mode, and USB Selective Suspend</div>
+            <div class="fix-detail">Hardware-Accelerated GPU Scheduling (HAGS), Windows Game Mode, Xbox Game Bar, and USB Selective Suspend can all contribute to scheduling irregularities. The pre-launch script disables all of these via registry on each run and restores them post-session. Low effort — the script handles it — but these settings revert between sessions on their own.</div>
+            <span class="fix-impact fi-amber">Incremental — handled automatically by the script</span>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -204,63 +363,42 @@ footer a:hover{color:var(--green);}
   <!-- DOWNLOADS -->
   <div class="dl-section">
     <div class="dl-title">Automation Scripts</div>
-    <div class="dl-sub">Run as Administrator. Must be customized with your system-specific values before use — see the guide for instructions.</div>
+    <div class="dl-sub">Run as Administrator before and after every session. The pre-launch script is a template — you'll need to fill in three values specific to your system. The guide explains exactly how to find each one.</div>
     <div class="dl-grid">
       <div class="dl-card">
         <div class="dl-card-top">
           <div class="dl-icon">⚙️</div>
           <div class="dl-card-info">
             <div class="dl-card-name">pre_iracing_launch.bat</div>
-            <div class="dl-card-desc">Run before every session. Disables background services, applies NVIDIA interrupt affinity to all device instances, sets AMD Ryzen Balanced power plan, verifies Process Lasso and Defender exclusions.</div>
+            <div class="dl-card-desc">Run before every session. Disables background services, Defender real-time monitoring, HAGS, Game Mode, and USB Suspend. Applies NVIDIA interrupt affinity to all device instances, sets AMD Ryzen Balanced power plan, verifies monitors are at max refresh rate.</div>
           </div>
         </div>
-        <div class="dl-warning">⚠ Update AMD Ryzen Balanced GUID, NVIDIA device instance IDs, and driver version before use</div>
-      <a href="pre_iracing_launch.bat" class="btn btn-download" download><span class="btn-icon">⬇</span>Download .bat</a>
+        <div class="dl-warning">⚠ Customize 3 values before use: AMD Ryzen Balanced GUID, NVIDIA device instance IDs, NVIDIA driver version string — see guide</div>
+        <a href="pre_iracing_launch.bat" class="btn btn-download" download><span class="btn-icon">⬇</span>Download .bat</a>
       </div>
       <div class="dl-card">
         <div class="dl-card-top">
           <div class="dl-icon">🔄</div>
           <div class="dl-card-info">
             <div class="dl-card-name">post_iracing_session.bat</div>
-            <div class="dl-card-desc">Run after every session. Re-enables all services that were disabled before racing — Windows Update, Windows Search, Bluetooth, WiFi, Backblaze, and Xbox Live.</div>
+            <div class="dl-card-desc">Run after every session. Restores Defender real-time monitoring and re-enables all services that were disabled — Windows Update, Windows Search, Bluetooth, WiFi, Backblaze, and Xbox Live. Stops Process Lasso.</div>
           </div>
         </div>
-        <div class="dl-warning">⚠ Run this after every session so Windows Update and backups resume</div>
+        <div class="dl-warning">⚠ Run this after every session so Windows Update and backups resume normally</div>
         <a href="post_iracing_session.bat" class="btn btn-download" download><span class="btn-icon">⬇</span>Download .bat</a>
       </div>
     </div>
   </div>
 
-  <!-- WHAT THIS COVERS -->
-  <div class="covers">
-    <div class="covers-title">What this guide covers</div>
-    <div class="covers-grid">
-      <div class="cover-item"><span class="cover-dot">✓</span>Identifying stutter type via CapFrameX frame data</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>LatencyMon setup and result interpretation</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>iRacing / iRSidekick graphics settings for X3D</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>app.ini texture preloading tweaks</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>NVIDIA driver install and Control Panel settings</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>Removing RTSS, MSI Afterburner, GeForce Experience</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>Disabling background Windows services properly</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>Windows Defender exclusions for iRacing</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>NVIDIA interrupt affinity — registry + GoInterruptPolicy</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>AMD Ryzen Balanced power plan — manual creation</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>Process Lasso — what works and what EAC blocks</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>Windows 11 MSI interrupt limitation explained</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>7800X3D vs 9800X3D compatibility notes</div>
-      <div class="cover-item"><span class="cover-dot">✓</span>Fresh build checklist and revert reference</div>
-    </div>
-  </div>
-
   <div class="callout warn">
     <span class="ci">⚠</span>
-    <span>The batch scripts contain system-specific values (registry paths, GUIDs, device IDs) that are unique to the author's computer. Before running them, read the guide to understand which values need to be replaced with your own. The guide explains how to find each value on your system.</span>
+    <span>The batch scripts contain system-specific values (AMD power plan GUID, NVIDIA device instance IDs, driver version string) that are unique to the author's system. Before running them, read the guide to understand which three values need to be replaced. The guide explains how to find each one on your own machine.</span>
   </div>
 
 </div>
 
 <footer>
-  iRacing Stutter Fix — AMD Ryzen X3D + NVIDIA · Community guide · May 2026<br>
+  iRacing Stutter Fix — AMD Ryzen X3D + NVIDIA · Community guide · Updated June 2026<br>
   <a href="https://github.com/rcsracing93/iracing-stutter-fix">github.com/rcsracing93/iracing-stutter-fix</a>
 </footer>
 
