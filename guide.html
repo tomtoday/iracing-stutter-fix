@@ -413,7 +413,7 @@ streamingTextureSize=256 <span class="cc">; Reduce burst size for any remaining 
   <table class="st">
     <tr><th>Setting</th><th>Value</th><th>Notes</th></tr>
     <tr><td class="sk">Power Management Mode</td><td class="sv">Prefer Maximum Performance</td><td class="sn">Prevents GPU clock stepping during session.</td></tr>
-    <tr><td class="sk">Low Latency Mode</td><td class="sv">Ultra</td><td class="sn">Reduces render queue depth, helps with present timing.</td></tr>
+    <tr><td class="sk">Low Latency Mode</td><td class="sv">On</td><td class="sn">Reduces render queue depth. Use <strong>On</strong>, not Ultra — Ultra caused present queue stall patterns in testing.</td></tr>
     <tr><td class="sk">Threaded Optimization</td><td class="sv">On</td><td class="sn">Distributes NVIDIA driver work across multiple cores rather than concentrating on CPU 0.</td></tr>
     <tr><td class="sk">Texture Filtering Quality</td><td class="sv">High Performance</td><td class="sn">Reduces texture filtering overhead.</td></tr>
     <tr><td class="sk">Vertical Sync</td><td class="sv">Off</td><td class="sn">iRacing handles its own frame pacing via the in-game cap.</td></tr>
@@ -503,7 +503,7 @@ Add-MpPreference -ExclusionPath "$env:USERPROFILE\Documents\iRacing"</div>
 
   <p>By default, NVIDIA's kernel driver (<span class="path">nvlddmkm.sys</span>) services all GPU interrupts on CPU 0 — the same core iRacing's sim thread is hardcoded to. Moving NVIDIA interrupts to a different core eliminates this competition.</p>
 
-  <div class="callout warn"><span class="ci">⚠</span><span><strong>Windows 11 limitation:</strong> Modern NVIDIA GPUs use MSI (Message Signaled Interrupts) mode, not MSI-X. Windows 11 client editions do not reliably honor interrupt affinity settings for MSI devices. Results vary — this works consistently on some systems and inconsistently on others. Windows 10 users typically have better results. Still worth attempting as the potential gain is significant.</span></div>
+  <div class="callout info"><span class="ci">ℹ</span><span><strong>Windows 11 — confirmed working, persistence workaround required.</strong> Modern NVIDIA GPUs use MSI mode (not MSI-X), which means Windows 11 resets interrupt affinity on every reboot. The fix itself works — regression is measurable and consistent when the setting slips. The pre-launch script re-applies it before every session as a workaround. Windows 10 users typically don't need this workaround.</span></div>
 
   <div class="callout unique"><span class="ci">🔧</span><span><strong>Device-specific values ahead.</strong> The GPU Device ID and device instance identifiers in this section are unique to each computer. You must find your own values using the commands provided — do not copy the example values.</span></div>
 
@@ -519,7 +519,7 @@ Add-MpPreference -ExclusionPath "$env:USERPROFILE\Documents\iRacing"</div>
 PCI\VEN_10DE&DEV_XXXX&SUBSYS_XXXXXXXX&REV_XX\4&XXXXXXXX&0&XXXX</div>
   </div>
 
-  <div class="callout unique"><span class="ci">🔧</span><span><strong>Important:</strong> There may be multiple device instances (2–3) for the same GPU. Windows alternates between them on each reboot. You must apply the affinity setting to <strong>all instances</strong> — use GoInterruptPolicy (Step 3) to identify each one, or apply the registry fix to all instances you find.</span></div>
+  <div class="callout unique"><span class="ci">🔧</span><span><strong>Important:</strong> There may be multiple device instances (2–4) for the same GPU. Windows alternates between them on each reboot. You must apply the affinity setting to <strong>all instances</strong> — use GoInterruptPolicy (Step 3) to identify each one, or apply the registry fix to all instances you find.</span></div>
 
   <h3>Step 2 — Apply via Registry (all instances)</h3>
   <p>For each device instance, run these three commands in admin cmd. Replace <span class="unique-val">YOUR_DEVICE_ID</span> with each full ID from Step 1 including the instance suffix (e.g. <code>4&amp;1babdf5b&amp;0&amp;0009</code>):</p>
@@ -529,7 +529,7 @@ PCI\VEN_10DE&DEV_XXXX&SUBSYS_XXXXXXXX&REV_XX\4&XXXXXXXX&0&XXXX</div>
     <div class="code-block"><span class="cc">:: Run for EACH device instance found in Step 1</span>
 reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f
 
-reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 10 /f
+reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f
 
 reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f</div>
   </div>
@@ -537,11 +537,11 @@ reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters
   <p>Key values explained:</p>
   <ul style="margin:.5rem 0 .75rem 1.5rem;font-size:14px;color:var(--text);">
     <li><strong>DevicePolicy = 4</strong> — IrqPolicySpecifiedProcessors (use the core we specify)</li>
-    <li><strong>AssignmentSetOverride = 10 (hex)</strong> — bitmask for logical CPU 4 (binary 00010000). CPU 4 = first thread of physical core 2 on most 8-core Ryzen CPUs</li>
+    <li><strong>AssignmentSetOverride = 8000000000000000 (REG_BINARY, little-endian)</strong> — byte 0 = 0x80 = bit 7 set = logical CPU 7. On most 8-core Ryzen CPUs, CPU 7 is the last logical thread of core 3 — a good choice to avoid competing with iRacing's sim thread on CPU 0.</li>
     <li><strong>DevicePriority = 3</strong> — High interrupt priority</li>
   </ul>
 
-  <p>Reboot after applying. Verify with LatencyMon — CPU 4 should now show elevated DPC activity.</p>
+  <p>Reboot after applying. Verify with LatencyMon — CPU 7 should now show elevated DPC activity, and CPU 0 should drop.</p>
 
   <h3>Step 3 — GoInterruptPolicy (alternative / supplement)</h3>
   <p>Download from <strong>github.com/spddl/GoInterruptPolicy</strong>. Run as Administrator. Search "nvidia" to filter the list.</p>
@@ -557,8 +557,8 @@ reg add "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters
   <h3>Verify It's Working</h3>
   <p>Run LatencyMon during iRacing. In Per CPU Data:</p>
   <ul style="margin:.5rem 0 .75rem 1.5rem;font-size:14px;color:var(--text);">
-    <li><strong>Working:</strong> CPU 4 shows 40–50s DPC total, CPU 0 drops to 10–15s</li>
-    <li><strong>Not working:</strong> CPU 0 still dominant (40s+), CPU 4 near zero</li>
+    <li><strong>Working:</strong> CPU 7 shows elevated DPC total, CPU 0 drops significantly</li>
+    <li><strong>Not working:</strong> CPU 0 still dominant (40s+), CPU 7 near zero</li>
   </ul>
 
   <h3>To Revert</h3>
@@ -641,7 +641,7 @@ powercfg /list</div>
 
   <p>This script automates everything that needs to happen before each session. Save as <span class="path">pre_iracing_launch.bat</span> and always run as Administrator before iRacing.</p>
 
-  <div class="callout unique"><span class="ci">🔧</span><span>This script contains values specific to one system that you must update: <strong>(1)</strong> The AMD Ryzen Balanced GUID — replace with your own from Section 06. <strong>(2)</strong> The three NVIDIA device instance IDs — find yours by running the wmic command in Section 05 and checking the registry for all instances under your GPU's VEN/DEV path. <strong>(3)</strong> The expected NVIDIA driver version string.</span></div>
+  <div class="callout unique"><span class="ci">🔧</span><span>This script contains values specific to one system that you must update: <strong>(1)</strong> The AMD Ryzen Balanced GUID — replace with your own from Section 06. <strong>(2)</strong> Your NVIDIA device instance IDs — find yours by running the wmic command in Section 05. Most systems have 2–4 instances; add a block for each one. <strong>(3)</strong> The expected NVIDIA driver version string.</span></div>
 
   <div class="code-wrap">
     <div class="code-label"><span>pre_iracing_launch.bat — update highlighted values before use</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
@@ -665,24 +665,29 @@ echo [OK]   Xbox Game Bar disabled
 <span class="cc">:: -------------------------------------------------------</span>
 <span class="cc">:: NVIDIA interrupt affinity — set on ALL device instances</span>
 <span class="cc">:: Windows alternates instances on each reboot so set all</span>
-<span class="cc">:: AssignmentSetOverride 10 hex = CPU 4 (Thread 4, Core 2)</span>
+<span class="cc">:: AssignmentSetOverride 8000000000000000 = CPU 7 (bitmask 0x80, byte 0)</span>
 <span class="cc">:: UPDATE: replace the three instance IDs with YOUR values</span>
 <span class="cc">:: -------------------------------------------------------</span>
 set NV=HKLM\System\CurrentControlSet\Enum\PCI\VEN_10DE^&DEV_2684^&SUBSYS_88EF1043^&REV_A1
 
-<span class="ch">:: === UPDATE THESE THREE DEVICE INSTANCE IDs === ::</span>
-reg add "%NV%\<span class="ch">4^&15a5c2648^&0^&000B</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
-reg add "%NV%\<span class="ch">4^&15a5c2648^&0^&000B</span>\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 10 /f >nul 2>&1
-reg add "%NV%\<span class="ch">4^&15a5c2648^&0^&000B</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
+<span class="ch">:: === CUSTOMIZE: replace YOUR_INSTANCE_N with your values (find via wmic command in Section 05) ===</span>
+<span class="cc">:: Most systems have 2-4 instances. Apply to all of them — Windows alternates on reboot.</span>
+<span class="cc">:: Run: wmic path Win32_PnPEntity where "Name like '%NVIDIA%'" get DeviceID,Name</span>
 
-reg add "%NV%\<span class="ch">4^&1babdf5b^&0^&0009</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
-reg add "%NV%\<span class="ch">4^&1babdf5b^&0^&0009</span>\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 10 /f >nul 2>&1
-reg add "%NV%\<span class="ch">4^&1babdf5b^&0^&0009</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
+reg add "%NV%\<span class="ch">YOUR_INSTANCE_1</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
+reg add "%NV%\<span class="ch">YOUR_INSTANCE_1</span>\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f >nul 2>&1
+reg add "%NV%\<span class="ch">YOUR_INSTANCE_1</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
 
-reg add "%NV%\<span class="ch">4^&285f7309^&0^&000C</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
-reg add "%NV%\<span class="ch">4^&285f7309^&0^&000C</span>\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 10 /f >nul 2>&1
-reg add "%NV%\<span class="ch">4^&285f7309^&0^&000C</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
-echo [OK]   NVIDIA interrupt affinity applied to all 3 instances
+reg add "%NV%\<span class="ch">YOUR_INSTANCE_2</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
+reg add "%NV%\<span class="ch">YOUR_INSTANCE_2</span>\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f >nul 2>&1
+reg add "%NV%\<span class="ch">YOUR_INSTANCE_2</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
+
+reg add "%NV%\<span class="ch">YOUR_INSTANCE_3</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
+reg add "%NV%\<span class="ch">YOUR_INSTANCE_3</span>\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f >nul 2>&1
+reg add "%NV%\<span class="ch">YOUR_INSTANCE_3</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
+
+<span class="cc">:: Add more blocks above if wmic shows additional instances</span>
+echo [OK]   NVIDIA interrupt affinity applied to all instances (CPU 7)
 
 <span class="cc">:: -------------------------------------------------------</span>
 <span class="cc">:: DISABLE services so they cannot restart mid-session</span>
@@ -808,7 +813,7 @@ pause</div>
       <div class="hwc-row"><strong>V-Cache:</strong> Single CCD, all 8 cores share the cache</div>
       <div class="hwc-row"><strong>Best power plan:</strong> AMD Ryzen Balanced</div>
       <div class="hwc-row"><strong>CPU affinity for iRacing:</strong> Blocked by EAC</div>
-      <div class="hwc-row"><strong>Interrupt affinity target:</strong> CPU 4 (Thread 4, Core 2)</div>
+      <div class="hwc-row"><strong>Interrupt affinity target:</strong> CPU 7 (AssignmentSetOverride = 0x80)</div>
       <div class="hwc-row"><strong>Tested:</strong> ✓ This guide is based on 7800X3D testing</div>
     </div>
     <div class="hw-card">
@@ -816,7 +821,7 @@ pause</div>
       <div class="hwc-row"><strong>V-Cache:</strong> Single CCD, same topology as 7800X3D</div>
       <div class="hwc-row"><strong>Best power plan:</strong> AMD Ryzen Balanced (same)</div>
       <div class="hwc-row"><strong>CPU affinity for iRacing:</strong> Blocked by EAC (same)</div>
-      <div class="hwc-row"><strong>Interrupt affinity target:</strong> CPU 4 recommended (same logic)</div>
+      <div class="hwc-row"><strong>Interrupt affinity target:</strong> CPU 7 recommended (same logic applies)</div>
       <div class="hwc-row"><strong>Tested:</strong> Not directly tested — same architecture, fixes should apply</div>
     </div>
     <div class="hw-card">
@@ -835,7 +840,7 @@ pause</div>
   </div>
 
   <h3>Other NVIDIA GPU Notes</h3>
-  <p>The interrupt affinity approach should work for any NVIDIA GPU, but the number of device instances in the registry varies. Some systems show only one instance, others show two or three. Run the wmic command in Section 05 to find yours. The AssignmentSetOverride bitmask value (10 hex = CPU 4) is a good starting point — use AutoGpuAffinity (github.com/valleyofdoom/AutoGpuAffinity) to benchmark and find the optimal core for your specific system.</p>
+  <p>The interrupt affinity approach should work for any NVIDIA GPU, but the number of device instances in the registry varies. Some systems show only one instance, others show two or three. Run the wmic command in Section 05 to find yours. The AssignmentSetOverride bitmask value (8000000000000000 = CPU 7, i.e. 0x80) is a confirmed starting point — use AutoGpuAffinity (github.com/valleyofdoom/AutoGpuAffinity) to benchmark and find the optimal core for your specific system.</p>
 
   <h3>Single Screen vs Triple Screen</h3>
   <p>The GPU load differences between single and triple screen are significant. All settings in this guide are tuned for triple 2560×1440. Single screen users may be able to run higher settings (MSAA 4x, crowds on) without triggering Type A GPU burst spikes. The CPU-side fixes (services, interrupt affinity, power plan) apply equally to both setups.</p>
@@ -873,7 +878,7 @@ pause</div>
     <ul class="cl">
       <li>Find all GPU device instances (Section 05 wmic command)</li>
       <li>Apply interrupt affinity registry fix to all instances (Section 05)</li>
-      <li>Reboot and verify with LatencyMon — CPU 4 should show elevated DPC activity</li>
+      <li>Reboot and verify with LatencyMon — CPU 7 should show elevated DPC activity, CPU 0 should drop</li>
       <li>Update pre-launch script with your device instance IDs</li>
     </ul>
   </div>
@@ -915,7 +920,7 @@ pause</div>
 
   <div class="rv">
     <div class="rv-t">NVIDIA Interrupt Affinity (Registry)</div>
-    <div class="rv-f">→ Applied: DevicePolicy=4, AssignmentSetOverride=10, DevicePriority=3 on all instances</div>
+    <div class="rv-f">→ Applied: DevicePolicy=4, AssignmentSetOverride=8000000000000000 (CPU 7), DevicePriority=3 on all instances</div>
     <div class="rv-r">← Revert: delete the Affinity Policy key for each instance and reboot</div>
     <div class="code-wrap no-label" style="margin-top:.5rem;">
       <div class="code-block">reg delete "HKLM\System\CurrentControlSet\Enum\PCI\YOUR_DEVICE_ID\Device Parameters\Interrupt Management\Affinity Policy" /f</div>
@@ -961,7 +966,7 @@ Remove-MpPreference -ExclusionPath "$env:USERPROFILE\Documents\iRacing"</div>
 
   <div class="rv">
     <div class="rv-t">NVIDIA Control Panel — Low Latency Mode</div>
-    <div class="rv-f">→ Applied: Ultra</div>
+    <div class="rv-f">→ Applied: On</div>
     <div class="rv-r">← Revert: NVIDIA Control Panel → Manage 3D Settings → iRacingSim64DX11.exe → Low Latency Mode → Off</div>
   </div>
 </div>
