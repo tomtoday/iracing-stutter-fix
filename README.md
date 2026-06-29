@@ -31,10 +31,11 @@ of blindly toggling settings.
 > services — note it does **not** re-enable Defender real-time monitoring, so confirm
 > Defender is back on after your session.
 
-1. Run [`find_my_values.bat`](find_my_values.bat) once. It prints your NVIDIA device
-   instances, AMD power-plan GUID, and driver version (it changes nothing).
-2. Open [`pre_iracing_launch.bat`](pre_iracing_launch.bat) and replace the three
-   `=== CUSTOMIZE ===` values with what you found. Use
+1. Run [`find_my_values.bat`](find_my_values.bat) once. It prints a four-line **CONFIG
+   block** (NVIDIA VEN/DEV path + device instances, AMD power-plan GUID, driver version)
+   and changes nothing.
+2. Paste those four lines over the **CONFIG block** at the top of
+   [`pre_iracing_launch.bat`](pre_iracing_launch.bat). Use
    [`pre_iracing_launch_example.bat`](pre_iracing_launch_example.bat) as a reference for a
    complete, filled-in script.
 3. Run the scripts **as Administrator**: `pre_iracing_launch.bat` before you race,

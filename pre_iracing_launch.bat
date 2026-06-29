@@ -12,8 +12,8 @@ color 0A
 :: https://rcsracing93.github.io/iracing-stutter-fix/guide.html
 ::
 :: HOW TO USE THIS TEMPLATE:
-:: Search for "=== CUSTOMIZE" to find the three values you must
-:: replace with your own. Everything else runs as-is.
+:: Fill in the CONFIG block just below (run find_my_values.bat -- it
+:: prints the four lines ready to paste). Everything else runs as-is.
 :: ================================================================
 
 net session >nul 2>&1
@@ -23,6 +23,23 @@ if %errorlevel% neq 0 (
     exit /b
 )
 echo [OK]   Running as Administrator
+
+:: ================================================================
+:: ============================ CONFIG ============================
+:: Fill in the four values below, then run this script as admin.
+:: Run find_my_values.bat first -- it prints these four lines ready
+:: to paste straight over the ones here.
+:: ================================================================
+:: 1) AMD Ryzen Balanced power plan GUID   (find: powercfg /list)
+set "POWER_GUID=YOUR-AMD-RYZEN-BALANCED-GUID"
+:: 2) NVIDIA GPU VEN/DEV path -- the part AFTER ...\Enum\PCI\
+set "NV_VENDEV=YOUR-GPU-VEN-DEV-PATH"
+:: 3) NVIDIA device instances -- one "quoted" entry each, space-separated.
+::    Add/remove entries to match how many your GPU has (usually 2-4).
+set NV_INSTANCES="YOUR_INSTANCE_1" "YOUR_INSTANCE_2"
+:: 4) Expected NVIDIA driver version string
+set "NV_DRIVER=YOUR-DRIVER-VERSION"
+:: ================================================================
 
 :: Pending reboot check
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired" >nul 2>&1
@@ -112,20 +129,9 @@ taskkill /IM "Claude.exe" /F >nul 2>&1
 taskkill /IM "claude-desktop.exe" /F >nul 2>&1
 echo [OK]   Claude closed
 
-:: ================================================================
-:: === CUSTOMIZE 1 of 3: AMD Ryzen Balanced Power Plan GUID ===
-::
-:: To find your GUID, run in admin PowerShell:
-::   powercfg /list
-:: Look for "AMD Ryzen Balanced" in the list.
-:: If it doesn't exist, create it:
-::   powercfg /duplicatescheme e4041c28-a933-4db9-9e7a-7a9a87c65676
-:: Then run powercfg /list again to get the new GUID.
-::
-:: Replace YOUR-AMD-RYZEN-BALANCED-GUID below with your value:
-:: ================================================================
-powercfg /setactive YOUR-AMD-RYZEN-BALANCED-GUID >nul 2>&1
-if %errorlevel%==0 (echo [OK]   Power plan set to AMD Ryzen Balanced) else (echo [WARN] Could not set AMD Ryzen Balanced - check GUID in Section 06 of guide)
+:: Power plan -- AMD Ryzen Balanced (POWER_GUID is set in CONFIG at top)
+powercfg /setactive %POWER_GUID% >nul 2>&1
+if %errorlevel%==0 (echo [OK]   Power plan set to AMD Ryzen Balanced) else (echo [WARN] Could not set AMD Ryzen Balanced - check POWER_GUID in CONFIG / guide Section 06)
 
 :: Process Lasso check
 tasklist | find /i "ProcessLasso.exe" >nul 2>&1
@@ -154,31 +160,11 @@ if defined MONHZ (
     echo [WARN] Could not check monitor refresh rate
 )
 
-:: ================================================================
-:: === CUSTOMIZE 2 of 3: NVIDIA Device Instance IDs ===
-::
-:: Each system has 2-5 device instances for the same GPU.
-:: Windows alternates between them on each reboot, so ALL must
-:: be set. Run this in Command Prompt to find yours:
-::
-::   wmic path Win32_PnPEntity where "Name like '%NVIDIA%'" get DeviceID,Name
-::
-:: Look for your GPU model. The instance suffix is the part after
-:: the last backslash: e.g. 4&1babdf5b&0&0009
-::
-:: You also need your GPU's VEN/DEV path. Run:
-::   reg query "HKLM\System\CurrentControlSet\Enum\PCI" /s /k | findstr /i "VEN_10DE"
-:: Find the path containing your GPU's device ID.
-::
-:: Replace the NV path and instance IDs below:
-:: ================================================================
-set "NV=HKLM\System\CurrentControlSet\Enum\PCI\YOUR-GPU-VEN-DEV-PATH"
-
-call :nvidia_affinity YOUR_INSTANCE_1
-call :nvidia_affinity YOUR_INSTANCE_2
-call :nvidia_affinity YOUR_INSTANCE_3
-call :nvidia_affinity YOUR_INSTANCE_4
-:: Add more lines above if wmic shows additional instances (some systems have 5+)
+:: NVIDIA MSI disable + interrupt affinity to CPU 7. NV_VENDEV and
+:: NV_INSTANCES are set in CONFIG at the top. The loop applies the fix
+:: to every instance; the quotes keep the & in each instance ID literal.
+set "NV=HKLM\System\CurrentControlSet\Enum\PCI\%NV_VENDEV%"
+for %%I in (%NV_INSTANCES%) do call :nvidia_affinity %%I
 
 echo [OK]   NVIDIA interrupt affinity set to CPU 7 on all instances
 
@@ -199,20 +185,10 @@ goto :after_exclusions
 echo [OK]   Defender exclusion checks skipped - monitoring suspended
 :after_exclusions
 
-:: ================================================================
-:: === CUSTOMIZE 3 of 3: NVIDIA driver version string ===
-::
-:: This checks that your driver hasn't changed since you last
-:: verified your GoInterruptPolicy settings. Get your version:
-::
-::   wmic path Win32_VideoController where "Name like '%NVIDIA%'" get DriverVersion
-::
-:: Replace YOUR-DRIVER-VERSION below. Update this value after
-:: every driver install.
-:: ================================================================
+:: NVIDIA driver version check (NV_DRIVER is set in CONFIG at top)
 for /f "tokens=*" %%a in ('powershell -command "(Get-WmiObject Win32_VideoController | Where-Object {$_.Name -like '*NVIDIA*'}).DriverVersion" 2^>nul') do set NVDRIVER=%%a
 if defined NVDRIVER (
-    if "!NVDRIVER!"=="YOUR-DRIVER-VERSION" (echo [OK]   NVIDIA driver confirmed: !NVDRIVER!) else (echo [WARN] NVIDIA driver changed: !NVDRIVER! - re-verify GoInterruptPolicy settings after driver updates)
+    if "!NVDRIVER!"=="%NV_DRIVER%" (echo [OK]   NVIDIA driver confirmed: !NVDRIVER!) else (echo [WARN] NVIDIA driver changed: !NVDRIVER! - re-verify GoInterruptPolicy settings after driver updates)
 ) else (echo [WARN] Could not read NVIDIA driver version)
 
 :: Final wuauserv check
