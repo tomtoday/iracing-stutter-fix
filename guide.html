@@ -671,116 +671,34 @@ powercfg /list</div>
 <div class="section" id="s8">
   <div class="section-label"><span class="section-num">08</span><span class="section-title">Pre-Launch Automation Script</span><span class="stag stag-green">AUTOMATION</span></div>
 
-  <p>This script automates everything that needs to happen before each session. Save as <span class="path">pre_iracing_launch.bat</span> and always run as Administrator before iRacing.</p>
+  <p>This script applies every per-session change in one shot — disabling MSI mode and pinning GPU interrupts to CPU 7 on all instances, stopping background services, suspending Defender, setting the power plan, and more. You configure it once, then run it before each session.</p>
 
-  <div class="callout unique"><span class="ci">🔧</span><span>This script contains values specific to one system that you must update: <strong>(1)</strong> The AMD Ryzen Balanced GUID — replace with your own from <a class="xref" href="#s6">Section 06</a>. <strong>(2)</strong> Your NVIDIA device instance IDs — find yours by running the wmic command in <a class="xref" href="#s5">Section 05</a>. Most systems have 2–4 instances; add a block for each one. <strong>(3)</strong> The expected NVIDIA driver version string. <strong>Tip:</strong> <a class="xref" href="index.html#downloads">find_my_values.bat</a> prints all three for you.</span></div>
+  <h4>Setup — do this once</h4>
+  <div class="steps">
+    <div class="step"><div class="step-body"><strong>Download both scripts</strong> from the <a class="xref" href="index.html#downloads">downloads section</a> — <code>pre_iracing_launch.bat</code> (the template) and <code>find_my_values.bat</code>.</div></div>
+    <div class="step"><div class="step-body"><strong>Run <code>find_my_values.bat</code> as Administrator.</strong> It reads your system (changing nothing) and prints the four-line CONFIG block below, filled in with your power-plan GUID, NVIDIA VEN/DEV path, device instances, and driver version.</div></div>
+    <div class="step"><div class="step-body"><strong>Paste those four lines over the CONFIG block</strong> at the top of <code>pre_iracing_launch.bat</code>. That is the only editing required — everything else runs as-is. If a value shows up as <code>YOUR-…</code> it couldn't be detected; find it manually via <a class="xref" href="#s5">Section 05</a> (NVIDIA values) or <a class="xref" href="#s6">Section 06</a> (power-plan GUID).</div></div>
+  </div>
 
   <div class="code-wrap">
-    <div class="code-label"><span>pre_iracing_launch.bat — update highlighted values before use</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
-    <div class="code-block">@echo off
-setlocal EnableDelayedExpansion
-title iRacing Pre-Launch Optimizer
-color 0A
+    <div class="code-label"><span>pre_iracing_launch.bat — the CONFIG block you fill in</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
+    <div class="code-block"><span class="cc">:: ============================ CONFIG ============================</span>
+<span class="cc">:: 1) AMD Ryzen Balanced power plan GUID   (find: powercfg /list)</span>
+set "POWER_GUID=<span class="ch">YOUR-AMD-RYZEN-BALANCED-GUID</span>"
+<span class="cc">:: 2) NVIDIA GPU VEN/DEV path -- the part AFTER ...\Enum\PCI\</span>
+set "NV_VENDEV=<span class="ch">YOUR-GPU-VEN-DEV-PATH</span>"
+<span class="cc">:: 3) NVIDIA device instances -- one "quoted" entry each, space-separated</span>
+set NV_INSTANCES=<span class="ch">"YOUR_INSTANCE_1" "YOUR_INSTANCE_2"</span>
+<span class="cc">:: 4) Expected NVIDIA driver version string</span>
+set "NV_DRIVER=<span class="ch">YOUR-DRIVER-VERSION</span>"
+<span class="cc">:: ===============================================================</span></div>
+  </div>
+  <p><span class="path">pre_iracing_launch_example.bat</span> shows the template fully filled in for a real 7800X3D / RTX 4090 system, if you want to see what a completed CONFIG looks like.</p>
 
-net session >nul 2>&1
-if %errorlevel% neq 0 (color 0C & echo [FAIL] Run as Administrator & pause & exit /b 1)
-echo [OK]   Running as Administrator
-
-<span class="cc">:: Pending reboot check</span>
-reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired" >nul 2>&1
-if %errorlevel%==0 (echo [WARN] Pending Windows reboot) else (echo [OK]   No pending reboot)
-
-<span class="cc">:: Disable Xbox Game Bar</span>
-reg add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\GameDVR" /v AppCaptureEnabled /t REG_DWORD /d 0 /f >nul 2>&1
-echo [OK]   Xbox Game Bar disabled
-
-<span class="cc">:: -------------------------------------------------------</span>
-<span class="cc">:: NVIDIA interrupt affinity — set on ALL device instances</span>
-<span class="cc">:: Windows alternates instances on each reboot so set all</span>
-<span class="cc">:: AssignmentSetOverride 8000000000000000 = CPU 7 (bitmask 0x80, byte 0)</span>
-<span class="cc">:: UPDATE: replace the three instance IDs with YOUR values</span>
-<span class="cc">:: -------------------------------------------------------</span>
-set NV=HKLM\System\CurrentControlSet\Enum\PCI\VEN_10DE^&DEV_2684^&SUBSYS_88EF1043^&REV_A1
-
-<span class="ch">:: === CUSTOMIZE: replace YOUR_INSTANCE_N with your values (find via wmic command in <a class="xref" href="#s5">Section 05</a>) ===</span>
-<span class="cc">:: Most systems have 2-4 instances. Apply to all of them — Windows alternates on reboot.</span>
-<span class="cc">:: Run: wmic path Win32_PnPEntity where "Name like '%NVIDIA%'" get DeviceID,Name</span>
-
-reg add "%NV%\<span class="ch">YOUR_INSTANCE_1</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
-reg add "%NV%\<span class="ch">YOUR_INSTANCE_1</span>\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f >nul 2>&1
-reg add "%NV%\<span class="ch">YOUR_INSTANCE_1</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
-
-reg add "%NV%\<span class="ch">YOUR_INSTANCE_2</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
-reg add "%NV%\<span class="ch">YOUR_INSTANCE_2</span>\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f >nul 2>&1
-reg add "%NV%\<span class="ch">YOUR_INSTANCE_2</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
-
-reg add "%NV%\<span class="ch">YOUR_INSTANCE_3</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
-reg add "%NV%\<span class="ch">YOUR_INSTANCE_3</span>\Device Parameters\Interrupt Management\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f >nul 2>&1
-reg add "%NV%\<span class="ch">YOUR_INSTANCE_3</span>\Device Parameters\Interrupt Management\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
-
-<span class="cc">:: Add more blocks above if wmic shows additional instances</span>
-echo [OK]   NVIDIA interrupt affinity applied to all instances (CPU 7)
-
-<span class="cc">:: -------------------------------------------------------</span>
-<span class="cc">:: DISABLE services so they cannot restart mid-session</span>
-<span class="cc">:: -------------------------------------------------------</span>
-sc config wuauserv start= disabled >nul 2>&1 & sc stop wuauserv >nul 2>&1
-sc query wuauserv | find "STOPPED" >nul 2>&1
-if %errorlevel%==0 (echo [OK]   Windows Update disabled) else (echo [WARN] Windows Update may still be running)
-
-sc config UsoSvc start= disabled >nul 2>&1 & sc stop UsoSvc >nul 2>&1
-echo [OK]   Update Orchestrator disabled
-
-sc config WSearch start= disabled >nul 2>&1 & sc stop WSearch >nul 2>&1
-sc query WSearch | find "STOPPED" >nul 2>&1
-if %errorlevel%==0 (echo [OK]   Windows Search disabled) else (echo [WARN] Windows Search may still be running)
-
-<span class="cc">:: Stop (not disable) remaining services</span>
-sc query SysMain | find "RUNNING" >nul 2>&1
-if %errorlevel%==0 (sc stop SysMain >nul 2>&1 & echo [OK]   SysMain stopped) else (echo [OK]   SysMain already stopped)
-sc query Spooler | find "RUNNING" >nul 2>&1
-if %errorlevel%==0 (sc stop Spooler >nul 2>&1 & echo [OK]   Spooler stopped) else (echo [OK]   Spooler already stopped)
-sc query WlanSvc | find "RUNNING" >nul 2>&1
-if %errorlevel%==0 (sc stop WlanSvc >nul 2>&1 & echo [OK]   WiFi stopped) else (echo [OK]   WiFi already stopped)
-sc query bthserv | find "RUNNING" >nul 2>&1
-if %errorlevel%==0 (sc stop BthAvctpSvc >nul 2>&1 & sc stop BTAGService >nul 2>&1 & sc stop bthserv >nul 2>&1 & echo [OK]   Bluetooth stopped) else (echo [OK]   Bluetooth already stopped)
-sc query XblAuthManager | find "RUNNING" >nul 2>&1
-if %errorlevel%==0 (sc stop XblAuthManager >nul 2>&1 & echo [OK]   Xbox Live stopped) else (echo [OK]   Xbox Live already stopped)
-
-<span class="cc">:: Backblaze — if installed</span>
-sc query bzserv >nul 2>&1
-if %errorlevel%==0 (sc query bzserv | find "RUNNING" >nul 2>&1 & if !errorlevel!==0 (sc stop bzserv >nul 2>&1 & echo [OK]   Backblaze stopped) else (echo [OK]   Backblaze already stopped))
-
-<span class="cc">:: -------------------------------------------------------</span>
-<span class="cc">:: Power plan — UPDATE with your AMD Ryzen Balanced GUID</span>
-<span class="cc">:: -------------------------------------------------------</span>
-powercfg /setactive <span class="ch">YOUR-AMD-RYZEN-BALANCED-GUID</span> >nul 2>&1
-if %errorlevel%==0 (echo [OK]   Power plan set to AMD Ryzen Balanced) else (echo [WARN] Could not set power plan - check GUID)
-
-<span class="cc">:: Process Lasso check</span>
-tasklist | find /i "ProcessLasso.exe" >nul 2>&1
-if %errorlevel%==0 (echo [OK]   Process Lasso running) else (echo [WARN] Process Lasso not running)
-
-<span class="cc">:: Defender exclusion check</span>
-powershell -command "if ((Get-MpPreference).ExclusionPath -contains 'C:\Program Files (x86)\iRacing') { exit 0 } else { exit 1 }" >nul 2>&1
-if %errorlevel%==0 (echo [OK]   Defender exclusion active) else (echo [WARN] Defender exclusion missing)
-
-<span class="cc">:: NVIDIA driver version check — UPDATE with your driver version</span>
-for /f "tokens=*" %%a in ('powershell -command "(Get-WmiObject Win32_VideoController | Where-Object {$_.Name -like '*NVIDIA*'}).DriverVersion" 2^>nul') do set DRV=%%a
-if defined DRV (
-    if "!DRV!"=="<span class="ch">YOUR-DRIVER-VERSION</span>" (echo [OK]   NVIDIA driver confirmed: !DRV!) else (echo [WARN] NVIDIA driver changed: !DRV! - re-verify affinity)
-)
-
-<span class="cc">:: Final wuauserv verify</span>
-sc query wuauserv | find "RUNNING" >nul 2>&1
-if %errorlevel%==0 (sc stop wuauserv >nul 2>&1 & echo [WARN] Windows Update restarted - stopped again) else (echo [OK]   Windows Update confirmed stopped)
-
-echo.
-echo ============================================================
-echo   Ready to launch iRacing.
-echo   Run post_iracing_session.bat when done.
-echo ============================================================
-pause</div>
+  <h4>Every session</h4>
+  <div class="steps">
+    <div class="step"><div class="step-body"><strong>Run <code>pre_iracing_launch.bat</code> as Administrator</strong> before you launch iRacing.</div></div>
+    <div class="step"><div class="step-body"><strong>Run <code>post_iracing_session.bat</code> as Administrator</strong> when you're done racing — it restores the services and Defender (see below).</div></div>
   </div>
 
   <h3>Post-Session Restore Script</h3>
