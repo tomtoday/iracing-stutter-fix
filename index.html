@@ -361,10 +361,20 @@ footer a:hover{color:var(--green);}
   </div>
 
   <!-- DOWNLOADS -->
-  <div class="dl-section">
+  <div class="dl-section" id="downloads">
     <div class="dl-title">Automation Scripts</div>
-    <div class="dl-sub">Run as Administrator before and after every session. The pre-launch script is a template — you'll need to fill in three values specific to your system. The guide explains exactly how to find each one.</div>
+    <div class="dl-sub">Run as Administrator before and after every session. The pre-launch script is a template — you'll need to fill in three values specific to your system. Run <strong>find_my_values.bat</strong> first to print those values; the guide explains each one.</div>
     <div class="dl-grid">
+      <div class="dl-card">
+        <div class="dl-card-top">
+          <div class="dl-icon">🔍</div>
+          <div class="dl-card-info">
+            <div class="dl-card-name">find_my_values.bat <span style="font-size:11px;color:var(--blue);font-weight:normal;">[SETUP]</span></div>
+            <div class="dl-card-desc">Run once during setup — read-only, changes nothing. Prints the three values you need to customize the template: your NVIDIA VEN/DEV path + device instances, driver version, and AMD Ryzen Balanced power-plan GUID.</div>
+          </div>
+        </div>
+        <a href="find_my_values.bat" class="btn btn-download" download><span class="btn-icon">⬇</span>Download .bat</a>
+      </div>
       <div class="dl-card">
         <div class="dl-card-top">
           <div class="dl-icon">⚙️</div>
