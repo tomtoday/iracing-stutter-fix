@@ -219,21 +219,21 @@ reg add "!_BASE!\MessageSignaledInterruptProperties" /v MSISupported /t REG_DWOR
 reg add "!_BASE!\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
 reg add "!_BASE!\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f >nul 2>&1
 reg add "!_BASE!\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
-if !errorlevel!==0 (echo [OK]   NVIDIA MSI disabled + affinity CPU7: !_NVINST!) else (echo [WARN] Could not set: !_NVINST!)
+if !errorlevel!==0 (echo [OK]   NVIDIA MSI disabled + affinity CPU7: "!_NVINST!") else (echo [WARN] Could not set: "!_NVINST!")
 exit /b
 
 :defender_path
 powershell -command "$p=(Get-MpPreference).ExclusionPath; if ($p -contains '!_DP!') { exit 0 } else { exit 1 }" >nul 2>&1
 if !errorlevel!==1 (
     powershell -command "Add-MpPreference -ExclusionPath '!_DP!'" >nul 2>&1
-    if !errorlevel!==0 (echo [FIXED] Defender exclusion added: !_DL!) else (echo [FAIL]  Could not add: !_DP!)
-) else (echo [OK]    Defender exclusion: !_DL!)
+    if !errorlevel!==0 (echo [FIXED] Defender exclusion added: "!_DL!") else (echo [FAIL]  Could not add: "!_DP!")
+) else (echo [OK]    Defender exclusion: "!_DL!")
 exit /b
 
 :defender_proc
 powershell -command "$p=(Get-MpPreference).ExclusionProcess; if ($p -contains '!_DC!') { exit 0 } else { exit 1 }" >nul 2>&1
 if !errorlevel!==1 (
     powershell -command "Add-MpPreference -ExclusionProcess '!_DC!'" >nul 2>&1
-    if !errorlevel!==0 (echo [FIXED] Defender process exclusion added: !_DC!) else (echo [FAIL]  Could not add: !_DC!)
-) else (echo [OK]    Defender exclusion: !_DC! ^(process^))
+    if !errorlevel!==0 (echo [FIXED] Defender process exclusion added: "!_DC!") else (echo [FAIL]  Could not add: "!_DC!")
+) else (echo [OK]    Defender exclusion: "!_DC!" ^(process^))
 exit /b

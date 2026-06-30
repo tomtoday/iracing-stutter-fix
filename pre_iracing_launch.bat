@@ -12,8 +12,9 @@ color 0A
 :: https://rcsracing93.github.io/iracing-stutter-fix/guide.html
 ::
 :: HOW TO USE THIS TEMPLATE:
-:: Fill in the CONFIG block just below (run find_my_values.bat -- it
-:: prints the four lines ready to paste). Everything else runs as-is.
+:: Run find_my_values.bat once, in this same folder -- it writes
+:: my_values.bat, which is auto-loaded below. Everything else runs
+:: as-is. (No my_values.bat? Fill in the CONFIG block by hand instead.)
 :: ================================================================
 
 net session >nul 2>&1
@@ -26,9 +27,9 @@ echo [OK]   Running as Administrator
 
 :: ================================================================
 :: ============================ CONFIG ============================
-:: Fill in the four values below, then run this script as admin.
-:: Run find_my_values.bat first -- it prints these four lines ready
-:: to paste straight over the ones here.
+:: These are fallback defaults, only used if my_values.bat is not
+:: found next to this script (see below). Run find_my_values.bat to
+:: generate that file instead of editing these by hand.
 :: ================================================================
 :: 1) AMD Ryzen Balanced power plan GUID   (find: powercfg /list)
 set "POWER_GUID=YOUR-AMD-RYZEN-BALANCED-GUID"
@@ -40,6 +41,40 @@ set NV_INSTANCES="YOUR_INSTANCE_1" "YOUR_INSTANCE_2"
 :: 4) Expected NVIDIA driver version string
 set "NV_DRIVER=YOUR-DRIVER-VERSION"
 :: ================================================================
+
+:: Auto-load machine-specific values from my_values.bat if present
+:: (written by find_my_values.bat into the same folder). Overrides
+:: the CONFIG block above so nothing has to be copy/pasted by hand.
+if exist "%~dp0my_values.bat" (
+    call "%~dp0my_values.bat"
+    echo [OK]   Loaded values from my_values.bat
+) else (
+    echo [WARN] my_values.bat not found - using values from the CONFIG block above. Run find_my_values.bat to generate it.
+)
+
+:: Refuse to run with placeholder values left over from the CONFIG
+:: block - applying them would silently do nothing useful (or fail)
+:: instead of telling you the setup step was skipped.
+set "_BAD_CONFIG="
+if "!POWER_GUID!"=="YOUR-AMD-RYZEN-BALANCED-GUID" set "_BAD_CONFIG=1"
+if "!NV_VENDEV!"=="YOUR-GPU-VEN-DEV-PATH" set "_BAD_CONFIG=1"
+if "!NV_DRIVER!"=="YOUR-DRIVER-VERSION" set "_BAD_CONFIG=1"
+if not "!NV_INSTANCES:YOUR_INSTANCE=!"=="!NV_INSTANCES!" set "_BAD_CONFIG=1"
+if defined _BAD_CONFIG (
+    color 0C
+    echo.
+    echo ============================================================
+    echo   [FAIL] CONFIG values are still placeholders - not running.
+    echo.
+    echo   Run find_my_values.bat in this same folder, then re-run
+    echo   this script - it auto-loads the values from my_values.bat.
+    echo   Or fill in the CONFIG block above by hand: see guide
+    echo   Section 05 - NVIDIA values, or Section 06 - power-plan GUID.
+    echo ============================================================
+    echo.
+    pause
+    exit /b 1
+)
 
 :: Pending reboot check
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired" >nul 2>&1
@@ -143,21 +178,33 @@ if %errorlevel%==0 (
     timeout /t 3 /nobreak >nul
 )
 
-:: Monitor refresh rate check - must be at max Hz
-for /f "tokens=*" %%a in ('powershell -command "(Get-WmiObject Win32_VideoController | Where-Object {$_.Name -like '*NVIDIA*'}).CurrentRefreshRate" 2^>nul') do set MONHZ=%%a
-if defined MONHZ (
-    if !MONHZ! GEQ 230 (
-        echo [OK]   Monitor refresh rate: !MONHZ! Hz
+:: Monitor refresh rate check - compares current Hz against the GPU-
+:: reported max for the active mode (catches monitors that reset to a
+:: lower Hz after sleep/reboot). Auto-detected every run, no setup
+:: needed. Allows a 5Hz tolerance since drivers sometimes report 1-2
+:: Hz under a panel's rated rate even while truly at max.
+set "MONHZ="
+set "MAXHZ="
+for /f "tokens=1,2" %%a in ('powershell -NoProfile -ExecutionPolicy Bypass -command "$ErrorActionPreference='SilentlyContinue'; $d=Get-CimInstance Win32_VideoController | Where-Object {$_.Name -like '*NVIDIA*'} | Select-Object -First 1; if($d -and $d.MaxRefreshRate){Write-Output ($d.CurrentRefreshRate.ToString()+' '+$d.MaxRefreshRate.ToString())}" 2^>nul') do (
+    set "MONHZ=%%a"
+    set "MAXHZ=%%b"
+)
+set "_REFRESH_DETECTED="
+if defined MONHZ if defined MAXHZ if !MAXHZ! GTR 0 set "_REFRESH_DETECTED=1"
+if defined _REFRESH_DETECTED (
+    set /a "_MIN_REFRESH_HZ=!MAXHZ!-5"
+    if !MONHZ! GEQ !_MIN_REFRESH_HZ! (
+        echo [OK]   Monitor refresh rate: !MONHZ! Hz ^(max detected: !MAXHZ! Hz^)
     ) else (
         color 0C
-        echo [FAIL] Monitor refresh rate: !MONHZ! Hz
+        echo [FAIL] Monitor refresh rate: !MONHZ! Hz - below detected max ^(!MAXHZ! Hz^)
         echo        Fix: Settings ^> System ^> Display ^> Advanced display ^> refresh rate
         echo        Set ALL monitors to max Hz, then re-run this script
         pause
         color 0A
     )
 ) else (
-    echo [WARN] Could not check monitor refresh rate
+    echo [WARN] Could not auto-detect monitor refresh rate - skipping check
 )
 
 :: NVIDIA MSI disable + interrupt affinity to CPU 7. NV_VENDEV and
@@ -215,7 +262,7 @@ reg add "!_BASE!\MessageSignaledInterruptProperties" /v MSISupported /t REG_DWOR
 reg add "!_BASE!\Affinity Policy" /v DevicePolicy /t REG_DWORD /d 4 /f >nul 2>&1
 reg add "!_BASE!\Affinity Policy" /v AssignmentSetOverride /t REG_BINARY /d 8000000000000000 /f >nul 2>&1
 reg add "!_BASE!\Affinity Policy" /v DevicePriority /t REG_DWORD /d 3 /f >nul 2>&1
-if !errorlevel!==0 (echo [OK]   NVIDIA MSI disabled + affinity CPU7: %~1) else (echo [WARN] Could not set: %~1)
+if !errorlevel!==0 (echo [OK]   NVIDIA MSI disabled + affinity CPU7: "%~1") else (echo [WARN] Could not set: "%~1")
 exit /b
 
 :: ---------------------------------------------------------------
@@ -224,8 +271,8 @@ exit /b
 powershell -command "$p=(Get-MpPreference).ExclusionPath; if ($p -contains '!_DP!') { exit 0 } else { exit 1 }" >nul 2>&1
 if !errorlevel!==1 (
     powershell -command "Add-MpPreference -ExclusionPath '!_DP!'" >nul 2>&1
-    if !errorlevel!==0 (echo [FIXED] Defender exclusion added: !_DL!) else (echo [FAIL]  Could not add exclusion: !_DP!)
-) else (echo [OK]    Defender exclusion: !_DL!)
+    if !errorlevel!==0 (echo [FIXED] Defender exclusion added: "!_DL!") else (echo [FAIL]  Could not add exclusion: "!_DP!")
+) else (echo [OK]    Defender exclusion: "!_DL!")
 exit /b
 
 :: Subroutine: check and auto-add Defender process exclusion
@@ -233,6 +280,6 @@ exit /b
 powershell -command "$p=(Get-MpPreference).ExclusionProcess; if ($p -contains '!_DC!') { exit 0 } else { exit 1 }" >nul 2>&1
 if !errorlevel!==1 (
     powershell -command "Add-MpPreference -ExclusionProcess '!_DC!'" >nul 2>&1
-    if !errorlevel!==0 (echo [FIXED] Defender process exclusion added: !_DC!) else (echo [FAIL]  Could not add: !_DC!)
-) else (echo [OK]    Defender exclusion: !_DC! ^(process^))
+    if !errorlevel!==0 (echo [FIXED] Defender process exclusion added: "!_DC!") else (echo [FAIL]  Could not add: "!_DC!")
+) else (echo [OK]    Defender exclusion: "!_DC!" ^(process^))
 exit /b

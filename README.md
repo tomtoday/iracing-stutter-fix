@@ -14,7 +14,7 @@ of blindly toggling settings.
 | [`index.html`](index.html) | Landing page — overview, results, prioritized fix list |
 | [`guide.html`](guide.html) | The full guide — decision tree, fixes A–F, checklists, revert reference |
 | [`progress.html`](progress.html) | Capture-by-capture research log |
-| [`find_my_values.bat`](find_my_values.bat) | Run **once** at setup — prints your machine-specific values (read-only) |
+| [`find_my_values.bat`](find_my_values.bat) | Run **once** at setup — writes `my_values.bat` with your machine-specific values (read-only) |
 | [`pre_iracing_launch.bat`](pre_iracing_launch.bat) | **Template** to run before racing — customize three values, then run as admin |
 | [`pre_iracing_launch_example.bat`](pre_iracing_launch_example.bat) | The author's real filled-in script — reference only, won't work as-is on your system |
 | [`post_iracing_session.bat`](post_iracing_session.bat) | Run **after** racing — restarts the background services the pre-launch script stopped |
@@ -31,14 +31,23 @@ of blindly toggling settings.
 > services — note it does **not** re-enable Defender real-time monitoring, so confirm
 > Defender is back on after your session.
 
-1. Run [`find_my_values.bat`](find_my_values.bat) once. It prints a four-line **CONFIG
-   block** (NVIDIA VEN/DEV path + device instances, AMD power-plan GUID, driver version)
-   and changes nothing.
-2. Paste those four lines over the **CONFIG block** at the top of
-   [`pre_iracing_launch.bat`](pre_iracing_launch.bat). Use
+1. Run [`find_my_values.bat`](find_my_values.bat) once, in the same folder as
+   `pre_iracing_launch.bat`. It's read-only and writes `my_values.bat` (your NVIDIA
+   VEN/DEV path + device instances, AMD power-plan GUID, driver version) next to itself.
+2. That's it — `pre_iracing_launch.bat` auto-loads `my_values.bat` if it finds it, so
+   there's no copy/paste step. (No `my_values.bat`? It falls back to the **CONFIG block**
+   at the top of the file — fill that in by hand instead, using the same quoting shown
+   there. Don't retype the NVIDIA values with different quote characters — `&` in those
+   values only stays literal with the exact `"…"` quoting shown, anything else and cmd
+   will misparse the line.) Use
    [`pre_iracing_launch_example.bat`](pre_iracing_launch_example.bat) as a reference for a
-   complete, filled-in script.
-3. Run the scripts **as Administrator**: `pre_iracing_launch.bat` before you race,
+   complete, filled-in script. `pre_iracing_launch.bat` refuses to run — and tells you why
+   — if any of the four values are still left as `YOUR-...` placeholders.
+3. The monitor refresh-rate check needs no setup — `pre_iracing_launch.bat` reads your
+   GPU-reported max Hz itself on every run and compares your current Hz against it (with a
+   5Hz tolerance, since drivers sometimes report 1-2 Hz under a panel's rated rate even at
+   true max — e.g. a 165Hz panel reporting 164Hz).
+4. Run the scripts **as Administrator**: `pre_iracing_launch.bat` before you race,
    `post_iracing_session.bat` when you're done.
 
 ## Notes

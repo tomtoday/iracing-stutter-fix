@@ -675,13 +675,13 @@ powercfg /list</div>
 
   <h4>Setup — do this once</h4>
   <div class="steps">
-    <div class="step"><div class="step-body"><strong>Download both scripts</strong> from the <a class="xref" href="index.html#downloads">downloads section</a> — <code>pre_iracing_launch.bat</code> (the template) and <code>find_my_values.bat</code>.</div></div>
-    <div class="step"><div class="step-body"><strong>Run <code>find_my_values.bat</code> as Administrator.</strong> It reads your system (changing nothing) and prints the four-line CONFIG block below, filled in with your power-plan GUID, NVIDIA VEN/DEV path, device instances, and driver version.</div></div>
-    <div class="step"><div class="step-body"><strong>Paste those four lines over the CONFIG block</strong> at the top of <code>pre_iracing_launch.bat</code>. That is the only editing required — everything else runs as-is. If a value shows up as <code>YOUR-…</code> it couldn't be detected; find it manually via <a class="xref" href="#s5">Section 05</a> (NVIDIA values) or <a class="xref" href="#s6">Section 06</a> (power-plan GUID).</div></div>
+    <div class="step"><div class="step-body"><strong>Download both scripts</strong> from the <a class="xref" href="index.html#downloads">downloads section</a> — <code>pre_iracing_launch.bat</code> (the template) and <code>find_my_values.bat</code> — into the <strong>same folder</strong>.</div></div>
+    <div class="step"><div class="step-body"><strong>Run <code>find_my_values.bat</code> as Administrator.</strong> It reads your system (changing nothing) and writes <code>my_values.bat</code> next to itself, filled in with your power-plan GUID, NVIDIA VEN/DEV path, device instances, and driver version.</div></div>
+    <div class="step"><div class="step-body">That's it — <code>pre_iracing_launch.bat</code> auto-loads <code>my_values.bat</code> on every run, so there's nothing to copy or paste. If a value shows up as <code>YOUR-…</code> it couldn't be detected; find it manually via <a class="xref" href="#s5">Section 05</a> (NVIDIA values) or <a class="xref" href="#s6">Section 06</a> (power-plan GUID), then edit <code>my_values.bat</code> directly, keeping the same quoting.</div></div>
   </div>
 
   <div class="code-wrap">
-    <div class="code-label"><span>pre_iracing_launch.bat — the CONFIG block you fill in</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
+    <div class="code-label"><span>pre_iracing_launch.bat — the CONFIG block (fallback only, used if my_values.bat is missing)</span><span class="cl-copy" onclick="copyCode(this)">Copy</span></div>
     <div class="code-block"><span class="cc">:: ============================ CONFIG ============================</span>
 <span class="cc">:: 1) AMD Ryzen Balanced power plan GUID   (find: powercfg /list)</span>
 set "POWER_GUID=<span class="ch">YOUR-AMD-RYZEN-BALANCED-GUID</span>"
@@ -693,6 +693,8 @@ set NV_INSTANCES=<span class="ch">"YOUR_INSTANCE_1" "YOUR_INSTANCE_2"</span>
 set "NV_DRIVER=<span class="ch">YOUR-DRIVER-VERSION</span>"
 <span class="cc">:: ===============================================================</span></div>
   </div>
+  <div class="callout warn"><span class="ci">⚠</span><span><strong>If editing by hand:</strong> keep the exact quoting shown above. The NVIDIA values contain literal <code>&amp;</code> characters (e.g. <code>VEN_10DE&amp;DEV_2782&amp;...</code>), and cmd.exe only treats <code>&amp;</code> as literal text when it's wrapped in real double quotes exactly like this — single quotes, missing quotes, or a value split across two lines will make cmd read each <code>&amp;</code> as a command separator and fail with "is not recognized as an internal or external command". <code>my_values.bat</code> is generated with the correct quoting automatically, which is why it's the recommended path.</span></div>
+  <div class="callout info"><span class="ci">ℹ</span><span>The monitor refresh-rate check below needs no configuration — it reads your GPU's reported max Hz for the active mode itself, every run, and compares your current Hz against it (5Hz tolerance, since drivers sometimes report 1-2 Hz under a panel's rated rate even at true max — e.g. a 165Hz monitor reporting 164Hz).</span></div>
   <p><span class="path">pre_iracing_launch_example.bat</span> shows the template fully filled in for a real 7800X3D / RTX 4090 system, if you want to see what a completed CONFIG looks like.</p>
 
   <h4>Every session</h4>
