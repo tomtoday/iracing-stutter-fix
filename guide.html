@@ -695,7 +695,6 @@ set "NV_DRIVER=<span class="ch">YOUR-DRIVER-VERSION</span>"
   </div>
   <div class="callout warn"><span class="ci">⚠</span><span><strong>If editing by hand:</strong> keep the exact quoting shown above. The NVIDIA values contain literal <code>&amp;</code> characters (e.g. <code>VEN_10DE&amp;DEV_2782&amp;...</code>), and cmd.exe only treats <code>&amp;</code> as literal text when it's wrapped in real double quotes exactly like this — single quotes, missing quotes, or a value split across two lines will make cmd read each <code>&amp;</code> as a command separator and fail with "is not recognized as an internal or external command". <code>my_values.bat</code> is generated with the correct quoting automatically, which is why it's the recommended path.</span></div>
   <div class="callout info"><span class="ci">ℹ</span><span>The monitor refresh-rate check below needs no configuration — it reads your GPU's reported max Hz for the active mode itself, every run, and compares your current Hz against it (5Hz tolerance, since drivers sometimes report 1-2 Hz under a panel's rated rate even at true max — e.g. a 165Hz monitor reporting 164Hz).</span></div>
-  <p><span class="path">pre_iracing_launch_example.bat</span> shows the template fully filled in for a real 7800X3D / RTX 4090 system, if you want to see what a completed CONFIG looks like.</p>
 
   <h4>Every session</h4>
   <div class="steps">

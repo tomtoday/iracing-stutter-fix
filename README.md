@@ -16,7 +16,6 @@ of blindly toggling settings.
 | [`progress.html`](progress.html) | Capture-by-capture research log |
 | [`find_my_values.bat`](find_my_values.bat) | Run **once** at setup — writes `my_values.bat` with your machine-specific values (read-only) |
 | [`pre_iracing_launch.bat`](pre_iracing_launch.bat) | **Template** to run before racing — customize three values, then run as admin |
-| [`pre_iracing_launch_example.bat`](pre_iracing_launch_example.bat) | The author's real filled-in script — reference only, won't work as-is on your system |
 | [`post_iracing_session.bat`](post_iracing_session.bat) | Run **after** racing — restarts the background services the pre-launch script stopped |
 
 **Live guide:** https://rcsracing93.github.io/iracing-stutter-fix/ — or open the HTML files directly in a browser.
@@ -39,10 +38,8 @@ of blindly toggling settings.
    at the top of the file — fill that in by hand instead, using the same quoting shown
    there. Don't retype the NVIDIA values with different quote characters — `&` in those
    values only stays literal with the exact `"…"` quoting shown, anything else and cmd
-   will misparse the line.) Use
-   [`pre_iracing_launch_example.bat`](pre_iracing_launch_example.bat) as a reference for a
-   complete, filled-in script. `pre_iracing_launch.bat` refuses to run — and tells you why
-   — if any of the four values are still left as `YOUR-...` placeholders.
+   will misparse the line.) `pre_iracing_launch.bat` refuses to run — and tells you why —
+   if any of the four values are still left as `YOUR-...` placeholders.
 3. The monitor refresh-rate check needs no setup — `pre_iracing_launch.bat` reads your
    GPU-reported max Hz itself on every run and compares your current Hz against it (with a
    5Hz tolerance, since drivers sometimes report 1-2 Hz under a panel's rated rate even at
